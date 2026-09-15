@@ -117,7 +117,75 @@ function Results() {
           </div>
         </div>
 
-        {/* Website Security Breakdown (for URL inputs) */}
+        {/* OCR Screenshot Inspection Card (for Image inputs) */}
+        {(result.input_type === 'image' || result.ocr_text) && (
+          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #34d399' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                📸 Optical Character Recognition (OCR) Extracted Text
+              </div>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '3px 10px',
+                borderRadius: '12px',
+                background: 'rgba(52, 211, 153, 0.15)',
+                color: '#34d399',
+                border: '1px solid rgba(52, 211, 153, 0.3)',
+              }}>
+                ✓ Native Windows OCR Processed
+              </span>
+            </div>
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '8px',
+              padding: '14px',
+              fontFamily: 'monospace',
+              fontSize: '0.88rem',
+              color: '#e2e8f0',
+              lineHeight: 1.6,
+              whiteSpace: 'pre-wrap',
+            }}>
+              {result.ocr_text || result.input_content}
+            </div>
+
+            {/* Embedded Link Callout */}
+            {result.embedded_url && (
+              <div style={{
+                marginTop: '14px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1rem' }}>🔗</span>
+                  <span style={{ fontSize: '0.85rem', color: '#fca5a5', fontWeight: 500 }}>
+                    Embedded link detected in screenshot: <strong>{result.embedded_url}</strong>
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  color: '#f87171',
+                }}>
+                  Security Scanned
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Website Security Breakdown (for URL inputs or screenshots with embedded URLs) */}
         {result.website_details && (
           <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #22d3ee' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>

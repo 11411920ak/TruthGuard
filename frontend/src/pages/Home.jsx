@@ -75,7 +75,9 @@ function Home() {
       type: isVideo ? 'video' : 'image',
       filename: file.name,
     })
-    navigate(`/analyze?${params.toString()}`)
+    navigate(`/analyze?${params.toString()}`, {
+      state: { file, type: isVideo ? 'video' : 'image' },
+    })
   }
 
   return (

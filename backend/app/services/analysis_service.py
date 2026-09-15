@@ -6,12 +6,14 @@ in later phases (claim extraction, evidence retrieval, scoring).
 
 import json
 from datetime import datetime, timezone
+from typing import Optional
 
 from app.models.database import Analysis, Claim, Source, Evidence, Result, get_session_factory
 from app.config import get_settings
 from app.analyzers.website_analyzer import analyze_website
 from app.analyzers.claim_extractor import extract_claims
 from app.analyzers.evidence_engine import verify_claims_and_retrieve_evidence
+from app.analyzers.image_analyzer import analyze_screenshot_image
 
 
 # ── Mock analysis data ──
@@ -77,18 +79,28 @@ def _select_mock(content: str) -> dict:
     return MOCK_VERDICTS["default"]
 
 
-async def run_analysis(analysis_id: str, input_type: str, input_content: str) -> dict:
+async def run_analysis(
+    analysis_id: str,
+    input_type: str,
+    input_content: str,
+    image_bytes: Optional[bytes] = None,
+) -> dict:
     """
     Run the verification pipeline on the given content.
+    - If input_type == 'image' and image_bytes: runs real image_analyzer with OCR
     - If input_type == 'url' or looks like a URL: runs real website_analyzer
     - Otherwise: runs text/claim verification pipeline
     """
     settings = get_settings()
     session_factory = get_session_factory(settings.database_url)
 
+    is_image = input_type == "image" or image_bytes is not None
     is_url = input_type == "url" or input_content.strip().startswith(("http://", "https://", "www."))
 
-    if is_url:
+    if is_image and image_bytes:
+        # Run real Screenshot & Image Verification Engine (OCR + Dual Verification)
+        result_data = await analyze_screenshot_image(image_bytes, input_content)
+    elif is_url:
         # Run real website security and reputation analysis
         result_data = await analyze_website(input_content)
     else:
@@ -140,6 +152,10 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
         analysis.confidence = result_data["confidence"]
         analysis.risk_score = result_data["risk_score"]
         analysis.evidence_coverage = result_data["evidence_coverage"]
+
+        # If image OCR produced text, append OCR summary for record keeping
+        if is_image and result_data.get("ocr_text"):
+            analysis.input_content = f"{input_content} | OCR: {result_data['ocr_text'][:250]}"
 
         # Create sources first so we have source IDs if needed
         sources_created = []

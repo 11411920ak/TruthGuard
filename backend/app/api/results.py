@@ -129,6 +129,18 @@ async def get_result(analysis_id: str):
                 signals=collected_signals,
             )
 
+        # Check OCR text and embedded link for image inputs
+        ocr_text = None
+        embedded_url = None
+        if analysis.input_type == "image":
+            if " | OCR: " in analysis.input_content:
+                parts = analysis.input_content.split(" | OCR: ", 1)
+                ocr_text = parts[1]
+            for s in sources:
+                if s.url:
+                    embedded_url = s.url
+                    break
+
         return AnalysisResultResponse(
             id=analysis.id,
             input_type=analysis.input_type,
@@ -143,4 +155,6 @@ async def get_result(analysis_id: str):
             sources=sources,
             recommendation=analysis.result.recommendation if analysis.result else "",
             website_details=website_details,
+            ocr_text=ocr_text,
+            embedded_url=embedded_url,
         )

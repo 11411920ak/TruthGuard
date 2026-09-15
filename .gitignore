@@ -38,7 +38,9 @@ desktop.ini
 # Uploads (temporary)
 uploads/
 temp/
+tests_media/
 
 # Coverage
 htmlcov/
 .coverage
+

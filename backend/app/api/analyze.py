@@ -14,7 +14,13 @@ from app.config import get_settings
 router = APIRouter(prefix="/analyze", tags=["analyze"])
 
 
-async def _create_analysis(input_type: str, input_content: str) -> AnalysisStartResponse:
+from typing import Optional
+
+async def _create_analysis(
+    input_type: str,
+    input_content: str,
+    image_bytes: Optional[bytes] = None,
+) -> AnalysisStartResponse:
     """Create an analysis record and run the pipeline."""
     settings = get_settings()
     session_factory = get_session_factory(settings.database_url)
@@ -30,8 +36,8 @@ async def _create_analysis(input_type: str, input_content: str) -> AnalysisStart
         await session.refresh(analysis)
         analysis_id = analysis.id
 
-    # Run analysis (currently synchronous mock; will be async/background later)
-    await run_analysis(analysis_id, input_type, input_content)
+    # Run analysis
+    await run_analysis(analysis_id, input_type, input_content, image_bytes=image_bytes)
 
     return AnalysisStartResponse(
         id=analysis_id,
@@ -56,7 +62,7 @@ async def analyze_url(request: UrlAnalyzeRequest):
 async def analyze_image(file: UploadFile = File(...)):
     """Analyze an uploaded image/screenshot."""
     # Validate file type
-    if file.content_type and not file.content_type.startswith("image/"):
+    if file.content_type and not (file.content_type.startswith("image/") or file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".bmp"))):
         raise HTTPException(status_code=400, detail="File must be an image")
 
     # Validate file size (max 10MB)
@@ -64,8 +70,7 @@ async def analyze_image(file: UploadFile = File(...)):
     if len(contents) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size must be under 10MB")
 
-    # For now, use filename as content. In later phases: OCR → text → claims
-    return await _create_analysis("image", f"[Image: {file.filename}]")
+    return await _create_analysis("image", f"[Screenshot: {file.filename}]", image_bytes=contents)
 
 
 @router.post("/video", response_model=AnalysisStartResponse)

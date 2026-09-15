@@ -66,6 +66,8 @@ class AnalysisResultResponse(BaseModel):
     sources: list[SourceResponse] = []
     recommendation: str = ""
     website_details: Optional[WebsiteDetails] = None
+    ocr_text: Optional[str] = None
+    embedded_url: Optional[str] = None
 
 
 class HistoryItemResponse(BaseModel):

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { analyzeText, analyzeUrl } from '../services/api'
+import { analyzeText, analyzeUrl, analyzeImage, analyzeVideo } from '../services/api'
 
 const steps = [
   { label: 'Receiving input', icon: '📥' },
+  { label: 'Running OCR & inspection', icon: '📸' },
   { label: 'Extracting claims', icon: '🧠' },
   { label: 'Searching sources', icon: '🔍' },
   { label: 'Analyzing evidence', icon: '📊' },
@@ -15,12 +16,14 @@ const steps = [
 function Analyze() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [currentStep, setCurrentStep] = useState(0)
   const [error, setError] = useState(null)
   const [analysisStarted, setAnalysisStarted] = useState(false)
 
-  const type = searchParams.get('type') || 'text'
+  const type = searchParams.get('type') || location.state?.type || 'text'
   const content = searchParams.get('content') || ''
+  const filename = searchParams.get('filename') || location.state?.file?.name || ''
 
   useEffect(() => {
     if (analysisStarted) return
@@ -35,11 +38,31 @@ function Analyze() {
     // Call the real API
     const doAnalysis = async () => {
       try {
+        if (!content && !location.state?.file && !filename) {
+          clearInterval(interval)
+          setError('No content or media file was provided for verification.')
+          return
+        }
+
         let result
-        if (type === 'url') {
+        if (type === 'image') {
+          if (!location.state?.file) {
+            clearInterval(interval)
+            setError('No image file found. Please upload a screenshot or image from the home page.')
+            return
+          }
+          result = await analyzeImage(location.state.file)
+        } else if (type === 'video') {
+          if (!location.state?.file) {
+            clearInterval(interval)
+            setError('No video file found. Please upload a video from the home page.')
+            return
+          }
+          result = await analyzeVideo(location.state.file)
+        } else if (type === 'url') {
           result = await analyzeUrl(content)
         } else {
-          result = await analyzeText(content)
+          result = await analyzeText(content || filename)
         }
 
         clearInterval(interval)
