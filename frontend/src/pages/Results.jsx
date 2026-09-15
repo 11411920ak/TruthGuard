@@ -185,6 +185,218 @@ function Results() {
           </div>
         )}
 
+        {/* Social Media Forensics Card (for Social Media inputs or viral forwards) */}
+        {result.social_details && (
+          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #a855f7' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                  📱 Social Media Credibility & Viral Forensics
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '1.4rem' }}>
+                    {result.social_details.platform.includes('Twitter') ? '🐦' :
+                     result.social_details.platform.includes('WhatsApp') ? '💬' :
+                     result.social_details.platform.includes('Telegram') ? '✈️' :
+                     result.social_details.platform.includes('Instagram') ? '📸' :
+                     result.social_details.platform.includes('Reddit') ? '🔴' : '📱'}
+                  </span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+                    {result.social_details.platform}
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Impersonation Risk Badge */}
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    background:
+                      result.social_details.impersonation_risk === 'HIGH'
+                        ? 'rgba(239, 68, 68, 0.15)'
+                        : result.social_details.impersonation_risk === 'MEDIUM'
+                        ? 'rgba(245, 158, 11, 0.15)'
+                        : result.social_details.impersonation_risk === 'LOW'
+                        ? 'rgba(52, 211, 153, 0.15)'
+                        : 'rgba(100, 116, 139, 0.15)',
+                    color:
+                      result.social_details.impersonation_risk === 'HIGH'
+                        ? '#f87171'
+                        : result.social_details.impersonation_risk === 'MEDIUM'
+                        ? '#fbbf24'
+                        : result.social_details.impersonation_risk === 'LOW'
+                        ? '#34d399'
+                        : '#94a3b8',
+                    border: `1px solid ${
+                      result.social_details.impersonation_risk === 'HIGH'
+                        ? 'rgba(239, 68, 68, 0.3)'
+                        : result.social_details.impersonation_risk === 'MEDIUM'
+                        ? 'rgba(245, 158, 11, 0.3)'
+                        : 'rgba(52, 211, 153, 0.3)'
+                    }`,
+                  }}
+                >
+                  🎭 Impersonation: {result.social_details.impersonation_risk}
+                </span>
+
+                {/* Virality / Manipulation Level */}
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    background:
+                      result.social_details.manipulation_level === 'HIGH'
+                        ? 'rgba(239, 68, 68, 0.15)'
+                        : result.social_details.manipulation_level === 'MEDIUM'
+                        ? 'rgba(245, 158, 11, 0.15)'
+                        : 'rgba(52, 211, 153, 0.15)',
+                    color:
+                      result.social_details.manipulation_level === 'HIGH'
+                        ? '#f87171'
+                        : result.social_details.manipulation_level === 'MEDIUM'
+                        ? '#fbbf24'
+                        : '#34d399',
+                    border: `1px solid ${
+                      result.social_details.manipulation_level === 'HIGH'
+                        ? 'rgba(239, 68, 68, 0.3)'
+                        : 'rgba(245, 158, 11, 0.3)'
+                    }`,
+                  }}
+                >
+                  ⚡ Manipulation: {result.social_details.manipulation_level} ({Math.round(result.social_details.manipulation_score)}%)
+                </span>
+              </div>
+            </div>
+
+            {/* Handles and Hashtags */}
+            {((result.social_details.handles && result.social_details.handles.length > 0) ||
+              (result.social_details.hashtags && result.social_details.hashtags.length > 0)) && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                {result.social_details.handles.map((h, idx) => (
+                  <span
+                    key={`h-${idx}`}
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.12)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      color: '#60a5fa',
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '0.78rem',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    @{h}
+                  </span>
+                ))}
+                {result.social_details.hashtags.map((ht, idx) => (
+                  <span
+                    key={`ht-${idx}`}
+                    style={{
+                      background: 'rgba(168, 85, 247, 0.12)',
+                      border: '1px solid rgba(168, 85, 247, 0.3)',
+                      color: '#c084fc',
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '0.78rem',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    #{ht}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Impersonation Warnings */}
+            {result.social_details.impersonation_flags && result.social_details.impersonation_flags.length > 0 && (
+              <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {result.social_details.impersonation_flags.map((flag, idx) => (
+                  <div
+                    key={`imp-${idx}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      color: '#fca5a5',
+                      fontSize: '0.82rem',
+                    }}
+                  >
+                    <span>⚠️</span>
+                    <span>{flag}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Manipulation & Virality Signals */}
+            {result.social_details.manipulation_signals && result.social_details.manipulation_signals.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {result.social_details.manipulation_signals.map((sig, idx) => (
+                  <div
+                    key={`sig-${idx}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      background: 'rgba(245, 158, 11, 0.08)',
+                      border: '1px solid rgba(245, 158, 11, 0.2)',
+                      color: '#fde68a',
+                      fontSize: '0.82rem',
+                    }}
+                  >
+                    <span>⚡</span>
+                    <span>{sig}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Embedded Link Callout */}
+            {result.social_details.embedded_url && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: 'rgba(34, 211, 238, 0.08)',
+                border: '1px solid rgba(34, 211, 238, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1rem' }}>🔗</span>
+                  <span style={{ fontSize: '0.85rem', color: '#67e8f9', fontWeight: 500 }}>
+                    Embedded link in post: <strong>{result.social_details.embedded_url}</strong>
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'rgba(34, 211, 238, 0.2)',
+                  color: '#22d3ee',
+                }}>
+                  Security Profile Below
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Website Security Breakdown (for URL inputs or screenshots with embedded URLs) */}
         {result.website_details && (
           <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #22d3ee' }}>

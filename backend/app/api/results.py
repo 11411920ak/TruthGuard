@@ -141,6 +141,22 @@ async def get_result(analysis_id: str):
                     embedded_url = s.url
                     break
 
+        # Check social details metadata
+        social_details = None
+        cleaned_reasons = []
+        for r in reasons:
+            if r.text.startswith("[SOCIAL_META: "):
+                try:
+                    import json
+                    json_str = r.text[len("[SOCIAL_META: "):].rstrip("]")
+                    from app.schemas.analysis import SocialDetails
+                    social_details = SocialDetails(**json.loads(json_str))
+                    continue
+                except Exception:
+                    pass
+            cleaned_reasons.append(r)
+        reasons = cleaned_reasons
+
         return AnalysisResultResponse(
             id=analysis.id,
             input_type=analysis.input_type,
@@ -157,4 +173,5 @@ async def get_result(analysis_id: str):
             website_details=website_details,
             ocr_text=ocr_text,
             embedded_url=embedded_url,
+            social_details=social_details,
         )

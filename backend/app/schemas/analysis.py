@@ -46,6 +46,18 @@ class WebsiteDetails(BaseModel):
     signals: list[str] = []
 
 
+class SocialDetails(BaseModel):
+    platform: str
+    handles: list[str] = []
+    hashtags: list[str] = []
+    impersonation_risk: str = "NONE"
+    impersonation_flags: list[str] = []
+    manipulation_level: str = "LOW"
+    manipulation_score: float = 0.0
+    manipulation_signals: list[str] = []
+    embedded_url: Optional[str] = None
+
+
 class AnalysisStartResponse(BaseModel):
     id: str
     status: str
@@ -68,6 +80,7 @@ class AnalysisResultResponse(BaseModel):
     website_details: Optional[WebsiteDetails] = None
     ocr_text: Optional[str] = None
     embedded_url: Optional[str] = None
+    social_details: Optional[SocialDetails] = None
 
 
 class HistoryItemResponse(BaseModel):

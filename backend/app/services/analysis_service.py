@@ -5,6 +5,7 @@ in later phases (claim extraction, evidence retrieval, scoring).
 """
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -14,6 +15,7 @@ from app.analyzers.website_analyzer import analyze_website
 from app.analyzers.claim_extractor import extract_claims
 from app.analyzers.evidence_engine import verify_claims_and_retrieve_evidence
 from app.analyzers.image_analyzer import analyze_screenshot_image
+from app.analyzers.social_analyzer import analyze_social_post
 
 
 # ── Mock analysis data ──
@@ -95,11 +97,29 @@ async def run_analysis(
     session_factory = get_session_factory(settings.database_url)
 
     is_image = input_type == "image" or image_bytes is not None
-    is_url = input_type == "url" or input_content.strip().startswith(("http://", "https://", "www."))
+    
+    # Check for social media signatures
+    content_lower = input_content.lower()
+    is_social = (
+        input_type == "social"
+        or any(m in content_lower for m in [
+            "forwarded as received", "forwarded many times", "whatsapp forward",
+            "share with 10", "share with 5", "forward to 10", "forward to all",
+            "share in all groups", "don't break the chain",
+        ])
+        or bool(re.search(r"(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com|t\.me|instagram\.com|reddit\.com|wa\.me)/", input_content, re.IGNORECASE))
+        or bool(re.search(r"@\w+", input_content))
+        or (content_lower.startswith("rt ") and "@" in input_content)
+    )
+
+    is_url = (not is_social) and (input_type == "url" or input_content.strip().startswith(("http://", "https://", "www.")))
 
     if is_image and image_bytes:
         # Run real Screenshot & Image Verification Engine (OCR + Dual Verification)
         result_data = await analyze_screenshot_image(image_bytes, input_content)
+    elif is_social:
+        # Run real Social Media Content & Viral Disinformation Analyzer
+        result_data = await analyze_social_post(input_content)
     elif is_url:
         # Run real website security and reputation analysis
         result_data = await analyze_website(input_content)
@@ -203,9 +223,15 @@ async def run_analysis(
                 )
                 session.add(evidence)
 
+        if is_social:
+            analysis.input_type = "social"
+
         # Format reasons string for Result.explanation
         reasons_list = result_data.get("reasons", [])
         explanation_parts = []
+        if result_data.get("social_details"):
+            explanation_parts.append(f"[SOCIAL_META: {json.dumps(result_data['social_details'])}]")
+
         for r in reasons_list:
             if isinstance(r, dict):
                 rtype = r.get("type", "warning")

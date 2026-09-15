@@ -20,6 +20,12 @@ function Home() {
 
   function detectInputType(value) {
     const trimmed = value.trim()
+    if (/twitter\.com|x\.com|t\.me|instagram\.com|reddit\.com|wa\.me/i.test(trimmed)) {
+      return 'social'
+    }
+    if (/forwarded|share with \d+|whatsapp/i.test(trimmed) || /@\w+/.test(trimmed)) {
+      return 'social'
+    }
     if (/^https?:\/\//i.test(trimmed) || /^www\./i.test(trimmed)) {
       return 'url'
     }
@@ -53,7 +59,7 @@ function Home() {
     const placeholders = {
       'Website': 'https://example.com',
       'News': 'Paste a news article or headline here...',
-      'Social Media': 'Paste the social media post content or URL...',
+      'Social Media': 'Forwarded many times: URGENT! Government announces ₹50,000 scholarship. Share with 10 contacts: http://fake-allowance.xyz',
       'Screenshot': '',
       'Video': '',
       'Shopping': 'https://shop-example.com/product',
@@ -63,8 +69,9 @@ function Home() {
       fileInputRef.current?.click()
       return
     }
-    setInput(placeholders[category] || '')
-    setInputType(category === 'Website' || category === 'Shopping' ? 'url' : 'text')
+    const sample = placeholders[category] || ''
+    setInput(sample)
+    setInputType(category === 'Website' || category === 'Shopping' ? 'url' : category === 'Social Media' ? 'social' : 'text')
   }
 
   function handleFileUpload(e) {
