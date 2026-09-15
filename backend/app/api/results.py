@@ -141,8 +141,9 @@ async def get_result(analysis_id: str):
                     embedded_url = s.url
                     break
 
-        # Check social details metadata
+        # Check social & video details metadata
         social_details = None
+        video_details = None
         cleaned_reasons = []
         for r in reasons:
             if r.text.startswith("[SOCIAL_META: "):
@@ -151,6 +152,15 @@ async def get_result(analysis_id: str):
                     json_str = r.text[len("[SOCIAL_META: "):].rstrip("]")
                     from app.schemas.analysis import SocialDetails
                     social_details = SocialDetails(**json.loads(json_str))
+                    continue
+                except Exception:
+                    pass
+            elif r.text.startswith("[VIDEO_META: "):
+                try:
+                    import json
+                    json_str = r.text[len("[VIDEO_META: "):].rstrip("]")
+                    from app.schemas.analysis import VideoDetails
+                    video_details = VideoDetails(**json.loads(json_str))
                     continue
                 except Exception:
                     pass
@@ -174,4 +184,5 @@ async def get_result(analysis_id: str):
             ocr_text=ocr_text,
             embedded_url=embedded_url,
             social_details=social_details,
+            video_details=video_details,
         )

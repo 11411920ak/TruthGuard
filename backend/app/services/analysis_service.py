@@ -16,6 +16,7 @@ from app.analyzers.claim_extractor import extract_claims
 from app.analyzers.evidence_engine import verify_claims_and_retrieve_evidence
 from app.analyzers.image_analyzer import analyze_screenshot_image
 from app.analyzers.social_analyzer import analyze_social_post
+from app.analyzers.video_analyzer import analyze_video_content
 
 
 # ── Mock analysis data ──
@@ -86,21 +87,24 @@ async def run_analysis(
     input_type: str,
     input_content: str,
     image_bytes: Optional[bytes] = None,
+    video_bytes: Optional[bytes] = None,
 ) -> dict:
     """
     Run the verification pipeline on the given content.
     - If input_type == 'image' and image_bytes: runs real image_analyzer with OCR
+    - If input_type == 'video' and video_bytes: runs real video_analyzer with keyframe OCR
     - If input_type == 'url' or looks like a URL: runs real website_analyzer
-    - Otherwise: runs text/claim verification pipeline
+    - Otherwise: runs text/claim or social verification pipeline
     """
     settings = get_settings()
     session_factory = get_session_factory(settings.database_url)
 
     is_image = input_type == "image" or image_bytes is not None
+    is_video = input_type == "video" or video_bytes is not None
     
     # Check for social media signatures
     content_lower = input_content.lower()
-    is_social = (
+    is_social = (not is_video) and (
         input_type == "social"
         or any(m in content_lower for m in [
             "forwarded as received", "forwarded many times", "whatsapp forward",
@@ -112,11 +116,14 @@ async def run_analysis(
         or (content_lower.startswith("rt ") and "@" in input_content)
     )
 
-    is_url = (not is_social) and (input_type == "url" or input_content.strip().startswith(("http://", "https://", "www.")))
+    is_url = (not is_video) and (not is_social) and (input_type == "url" or input_content.strip().startswith(("http://", "https://", "www.")))
 
     if is_image and image_bytes:
         # Run real Screenshot & Image Verification Engine (OCR + Dual Verification)
         result_data = await analyze_screenshot_image(image_bytes, input_content)
+    elif is_video and video_bytes:
+        # Run real Video Verification Engine (Keyframe OCR + Sensationalism Analysis)
+        result_data = await analyze_video_content(video_bytes, input_content)
     elif is_social:
         # Run real Social Media Content & Viral Disinformation Analyzer
         result_data = await analyze_social_post(input_content)
@@ -231,6 +238,8 @@ async def run_analysis(
         explanation_parts = []
         if result_data.get("social_details"):
             explanation_parts.append(f"[SOCIAL_META: {json.dumps(result_data['social_details'])}]")
+        if result_data.get("video_details"):
+            explanation_parts.append(f"[VIDEO_META: {json.dumps(result_data['video_details'])}]")
 
         for r in reasons_list:
             if isinstance(r, dict):

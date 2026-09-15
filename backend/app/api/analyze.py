@@ -20,6 +20,7 @@ async def _create_analysis(
     input_type: str,
     input_content: str,
     image_bytes: Optional[bytes] = None,
+    video_bytes: Optional[bytes] = None,
 ) -> AnalysisStartResponse:
     """Create an analysis record and run the pipeline."""
     settings = get_settings()
@@ -37,7 +38,13 @@ async def _create_analysis(
         analysis_id = analysis.id
 
     # Run analysis
-    await run_analysis(analysis_id, input_type, input_content, image_bytes=image_bytes)
+    await run_analysis(
+        analysis_id,
+        input_type,
+        input_content,
+        image_bytes=image_bytes,
+        video_bytes=video_bytes,
+    )
 
     return AnalysisStartResponse(
         id=analysis_id,
@@ -77,13 +84,17 @@ async def analyze_image(file: UploadFile = File(...)):
 async def analyze_video(file: UploadFile = File(...)):
     """Analyze an uploaded video."""
     # Validate file type
-    if file.content_type and not file.content_type.startswith("video/"):
-        raise HTTPException(status_code=400, detail="File must be a video")
+    fname = (file.filename or "").lower()
+    is_valid_video = (
+        (file.content_type and file.content_type.startswith("video/"))
+        or fname.endswith((".mp4", ".webm", ".avi", ".mov", ".mkv"))
+    )
+    if not is_valid_video:
+        raise HTTPException(status_code=400, detail="File must be a video (.mp4, .webm, .avi, .mov, .mkv)")
 
     # Validate file size (max 100MB)
     contents = await file.read()
     if len(contents) > 100 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size must be under 100MB")
 
-    # For now, use filename. In later phases: audio extraction → STT → claims
-    return await _create_analysis("video", f"[Video: {file.filename}]")
+    return await _create_analysis("video", file.filename or "video.mp4", video_bytes=contents)

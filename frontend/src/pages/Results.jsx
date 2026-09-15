@@ -397,6 +397,165 @@ function Results() {
           </div>
         )}
 
+        {/* Video Forensics & Keyframe Analysis Card (for Video inputs) */}
+        {result.video_details && (
+          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #f43f5e' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                  🎥 Video Temporal & Keyframe Forensics
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '1.4rem' }}>🎬</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+                    {result.video_details.filename}
+                  </span>
+                </div>
+              </div>
+
+              {/* Video Specs Badges */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background: 'rgba(244, 63, 94, 0.15)',
+                  color: '#fb7185',
+                  border: '1px solid rgba(244, 63, 94, 0.3)',
+                }}>
+                  ⏱️ {result.video_details.duration}s
+                </span>
+                <span style={{
+                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background: 'rgba(14, 165, 233, 0.15)',
+                  color: '#38bdf8',
+                  border: '1px solid rgba(14, 165, 233, 0.3)',
+                }}>
+                  📺 {result.video_details.resolution} @ {result.video_details.fps} FPS
+                </span>
+                <span style={{
+                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background: 'rgba(52, 211, 153, 0.15)',
+                  color: '#34d399',
+                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                }}>
+                  🔍 {result.video_details.keyframes_sampled} Frames Analyzed
+                </span>
+                <span style={{
+                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background:
+                    result.video_details.sensationalism_level === 'HIGH'
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : result.video_details.sensationalism_level === 'MEDIUM'
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : 'rgba(52, 211, 153, 0.15)',
+                  color:
+                    result.video_details.sensationalism_level === 'HIGH'
+                      ? '#f87171'
+                      : result.video_details.sensationalism_level === 'MEDIUM'
+                      ? '#fbbf24'
+                      : '#34d399',
+                  border: `1px solid ${
+                    result.video_details.sensationalism_level === 'HIGH'
+                      ? 'rgba(239, 68, 68, 0.3)'
+                      : 'rgba(245, 158, 11, 0.3)'
+                  }`,
+                }}>
+                  ⚡ Sensationalism: {result.video_details.sensationalism_level} ({Math.round(result.video_details.sensationalism_score)}%)
+                </span>
+              </div>
+            </div>
+
+            {/* On-Screen Text OCR Transcript */}
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', fontWeight: 600 }}>
+                Visual On-Screen Text & Subtitle OCR (Sampled Keyframes)
+              </div>
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.25)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                color: '#e2e8f0',
+                lineHeight: 1.6,
+                whiteSpace: 'pre-wrap',
+              }}>
+                {result.video_details.on_screen_text || '[No on-screen text overlays detected across sampled keyframes]'}
+              </div>
+            </div>
+
+            {/* Sensationalism Signals */}
+            {result.video_details.sensationalism_signals && result.video_details.sensationalism_signals.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                {result.video_details.sensationalism_signals.map((sig, idx) => (
+                  <div
+                    key={`sens-${idx}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      background: 'rgba(244, 63, 94, 0.08)',
+                      border: '1px solid rgba(244, 63, 94, 0.2)',
+                      color: '#fda4af',
+                      fontSize: '0.82rem',
+                    }}
+                  >
+                    <span>⚠️</span>
+                    <span>{sig}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Embedded Link Callout */}
+            {result.video_details.embedded_url && (
+              <div style={{
+                marginTop: '10px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1rem' }}>🔗</span>
+                  <span style={{ fontSize: '0.85rem', color: '#fca5a5', fontWeight: 500 }}>
+                    On-Screen URL detected in video: <strong>{result.video_details.embedded_url}</strong>
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  color: '#f87171',
+                }}>
+                  Security Scanned Below
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Website Security Breakdown (for URL inputs or screenshots with embedded URLs) */}
         {result.website_details && (
           <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #22d3ee' }}>

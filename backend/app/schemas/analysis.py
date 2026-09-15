@@ -58,6 +58,20 @@ class SocialDetails(BaseModel):
     embedded_url: Optional[str] = None
 
 
+class VideoDetails(BaseModel):
+    filename: str
+    duration: float = 0.0
+    fps: float = 0.0
+    resolution: str = "Unknown"
+    frame_count: int = 0
+    keyframes_sampled: int = 0
+    on_screen_text: Optional[str] = None
+    sensationalism_level: str = "LOW"
+    sensationalism_score: float = 0.0
+    sensationalism_signals: list[str] = []
+    embedded_url: Optional[str] = None
+
+
 class AnalysisStartResponse(BaseModel):
     id: str
     status: str
@@ -81,6 +95,7 @@ class AnalysisResultResponse(BaseModel):
     ocr_text: Optional[str] = None
     embedded_url: Optional[str] = None
     social_details: Optional[SocialDetails] = None
+    video_details: Optional[VideoDetails] = None
 
 
 class HistoryItemResponse(BaseModel):
