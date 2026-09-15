@@ -104,7 +104,17 @@ class HistoryItemResponse(BaseModel):
     input_content: str
     verdict: str
     confidence: float
+    risk_score: float = 0.0
     created_at: str
+
+
+class DashboardStatsResponse(BaseModel):
+    total_scans: int = 0
+    verdict_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    avg_confidence: float = 0.0
+    avg_risk_score: float = 0.0
+    recent_threats: list[str] = []
 
 
 class HistoryResponse(BaseModel):

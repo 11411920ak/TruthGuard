@@ -46,8 +46,13 @@ export async function getResult(id) {
   return response.data
 }
 
-export async function getHistory() {
-  const response = await api.get('/history')
+export async function getHistory(params = {}) {
+  const response = await api.get('/history', { params })
+  return response.data
+}
+
+export async function getHistoryStats() {
+  const response = await api.get('/history/stats')
   return response.data
 }
 
