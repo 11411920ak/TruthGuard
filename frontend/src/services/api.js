@@ -56,6 +56,18 @@ export async function getHistoryStats() {
   return response.data
 }
 
+// ── Evaluation & Metrics APIs ──
+
+export async function getEvaluationMetrics() {
+  const response = await api.get('/evaluation/metrics')
+  return response.data
+}
+
+export async function runEvaluationBenchmark() {
+  const response = await api.post('/evaluation/run')
+  return response.data
+}
+
 // ── Health check ──
 
 export async function healthCheck() {

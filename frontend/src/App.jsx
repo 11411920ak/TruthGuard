@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Analyze from './pages/Analyze'
 import Results from './pages/Results'
 import History from './pages/History'
+import Evaluation from './pages/Evaluation'
 import About from './pages/About'
 import Login from './pages/Login'
 import './index.css'
@@ -23,6 +24,7 @@ function App() {
         <Route path="/analyze" element={<Analyze />} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="/history" element={<History />} />
+        <Route path="/evaluation" element={<Evaluation />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
       </Routes>

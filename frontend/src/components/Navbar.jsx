@@ -5,7 +5,8 @@ function Navbar() {
 
   const links = [
     { path: '/', label: 'Home' },
-    { path: '/history', label: 'History' },
+    { path: '/history', label: 'Dashboard' },
+    { path: '/evaluation', label: 'Evaluation' },
     { path: '/about', label: 'About' },
   ]
 

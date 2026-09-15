@@ -1,0 +1,162 @@
+[
+  {
+    "id": "bench-001",
+    "input_type": "text",
+    "content": "Government of India launched PM Kisan Samman Nidhi providing ₹6000 annual financial support to farmers.",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "government",
+    "description": "Factual PM-KISAN scheme confirmed by official portals"
+  },
+  {
+    "id": "bench-002",
+    "input_type": "text",
+    "content": "ISRO successfully launched Chandrayaan-3 lunar exploration mission.",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "science",
+    "description": "Historical space mission confirmed by world media"
+  },
+  {
+    "id": "bench-003",
+    "input_type": "text",
+    "content": "Reserve Bank of India regulates monetary policy and currency issuance in India.",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "banking",
+    "description": "Standard institutional statutory role"
+  },
+  {
+    "id": "bench-004",
+    "input_type": "text",
+    "content": "Ministry of Education announces ₹50,000 cash grant and free laptops for every college student across India.",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "scheme",
+    "description": "Debunked viral scholarship scam"
+  },
+  {
+    "id": "bench-005",
+    "input_type": "text",
+    "content": "Prime minister announces free recharge of ₹499 for all mobile users on WhatsApp. Claim at http://free-recharge.xyz",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "scam",
+    "description": "Viral fake recharge scheme with phishing URL"
+  },
+  {
+    "id": "bench-006",
+    "input_type": "text",
+    "content": "A rare emerald-breasted hummingbird was spotted nesting inside a teapot in Rajkot yesterday morning.",
+    "expected_verdict": "UNVERIFIED",
+    "category": "general",
+    "description": "Obscure unproven claim with zero independent reporting"
+  },
+  {
+    "id": "bench-007",
+    "input_type": "text",
+    "content": "Local baker in a small village claims to bake bread using water harvested from morning mist.",
+    "expected_verdict": "UNVERIFIED",
+    "category": "general",
+    "description": "Anecdotal unbacked claim testing UNVERIFIED engine"
+  },
+  {
+    "id": "bench-008",
+    "input_type": "social",
+    "content": "Forwarded many times: URGENT! Share with 10 contacts to win ₹10,000 cash bonus immediately before midnight!",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "social",
+    "description": "Viral chain forward with fake monetary reward and urgency"
+  },
+  {
+    "id": "bench-009",
+    "input_type": "social",
+    "content": "RT @RBI_official_bonus247: Claim your ₹25,000 KYC refund instantly at http://rbi-bonus.top. #RBIRefund",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "social",
+    "description": "Spoofed official banking handle with phishing link"
+  },
+  {
+    "id": "bench-010",
+    "input_type": "social",
+    "content": "Forwarded as received: Don't ignore! New telecom rule will deactivate all SIM cards not verified in 24 hours.",
+    "expected_verdict": "SUSPICIOUS",
+    "category": "social",
+    "description": "High artificial urgency chain rumor"
+  },
+  {
+    "id": "bench-011",
+    "input_type": "url",
+    "content": "https://pib.gov.in/FactCheck",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "url",
+    "description": "Official government fact checking portal"
+  },
+  {
+    "id": "bench-012",
+    "input_type": "url",
+    "content": "http://free-laptops-scheme.xyz",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "url",
+    "description": "Insecure HTTP scam domain with high risk TLD"
+  },
+  {
+    "id": "bench-013",
+    "input_type": "url",
+    "content": "http://192.168.1.1/admin",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "url",
+    "description": "Private IP SSRF exploit payload"
+  },
+  {
+    "id": "bench-014",
+    "input_type": "text",
+    "content": "World Health Organization declares malaria is caused by drinking cold water during winter.",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "medical",
+    "description": "Blatant medical disinformation falsely citing WHO"
+  },
+  {
+    "id": "bench-015",
+    "input_type": "text",
+    "content": "UNESCO declares Indian national anthem as the best anthem in the world.",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "social",
+    "description": "Classic recurring viral disinformation trope"
+  },
+  {
+    "id": "bench-016",
+    "input_type": "text",
+    "content": "Supreme Court of India issues official verdict on digital data protection and privacy guidelines.",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "law",
+    "description": "Factual judicial reporting"
+  },
+  {
+    "id": "bench-017",
+    "input_type": "text",
+    "content": "Secret miracle leaf cures diabetes completely within three days doctors hate this trick.",
+    "expected_verdict": "SUSPICIOUS",
+    "category": "medical",
+    "description": "Miracle cure sensationalist clickbait"
+  },
+  {
+    "id": "bench-018",
+    "input_type": "text",
+    "content": "A high school student in Shimla discovered a collection of antique brass buttons dated 1892 in her garden.",
+    "expected_verdict": "UNVERIFIED",
+    "category": "general",
+    "description": "Harmless unbacked local occurrence"
+  },
+  {
+    "id": "bench-019",
+    "input_type": "text",
+    "content": "Railway Ministry launches new Vande Bharat train routes connecting major metropolitan corridors.",
+    "expected_verdict": "LIKELY_TRUE",
+    "category": "infrastructure",
+    "description": "Official railway modernization reporting"
+  },
+  {
+    "id": "bench-020",
+    "input_type": "text",
+    "content": "Government offering free solar panels and monthly allowance of ₹15,000 to anyone who applies via SMS.",
+    "expected_verdict": "LIKELY_FALSE",
+    "category": "scheme",
+    "description": "Fraudulent solar energy grant scam"
+  }
+]
