@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from app.models.database import Analysis, Claim, Source, Evidence, Result, get_session_factory
 from app.config import get_settings
+from app.analyzers.website_analyzer import analyze_website
 
 
 # ── Mock analysis data ──
@@ -76,60 +77,112 @@ def _select_mock(content: str) -> dict:
 async def run_analysis(analysis_id: str, input_type: str, input_content: str) -> dict:
     """
     Run the verification pipeline on the given content.
-
-    Currently returns mock results. In later phases, this will:
-    1. Extract claims (LLM)
-    2. Search for evidence (search APIs)
-    3. Analyze source reliability
-    4. Calculate confidence scores
-    5. Produce verdict
+    - If input_type == 'url' or looks like a URL: runs real website_analyzer
+    - Otherwise: runs text/claim verification pipeline
     """
     settings = get_settings()
     session_factory = get_session_factory(settings.database_url)
 
-    # Select appropriate mock
-    mock = _select_mock(input_content)
+    is_url = input_type == "url" or input_content.strip().startswith(("http://", "https://", "www."))
+
+    if is_url:
+        # Run real website security and reputation analysis
+        result_data = await analyze_website(input_content)
+    else:
+        # Select appropriate mock for text claims (prior to Phase 6+ LLM/search integration)
+        mock = _select_mock(input_content)
+        result_data = {
+            "verdict": mock["verdict"],
+            "confidence": mock["confidence"],
+            "risk_score": mock["risk_score"],
+            "evidence_coverage": mock["evidence_coverage"],
+            "claims": [
+                {
+                    "claim_text": c["claim_text"] or input_content,
+                    "claim_type": c["claim_type"],
+                    "verdict": c["verdict"],
+                    "confidence": c["confidence"],
+                }
+                for c in mock["claims"]
+            ],
+            "sources": mock["sources"],
+            "reasons": mock["reasons"],
+            "signals": [r["text"] for r in mock["reasons"]],
+            "recommendation": mock["recommendation"],
+        }
 
     async with session_factory() as session:
-        # Update analysis status
         analysis = await session.get(Analysis, analysis_id)
         if not analysis:
             return {"error": "Analysis not found"}
 
         analysis.status = "completed"
-        analysis.verdict = mock["verdict"]
-        analysis.confidence = mock["confidence"]
-        analysis.risk_score = mock["risk_score"]
-        analysis.evidence_coverage = mock["evidence_coverage"]
+        analysis.verdict = result_data["verdict"]
+        analysis.confidence = result_data["confidence"]
+        analysis.risk_score = result_data["risk_score"]
+        analysis.evidence_coverage = result_data["evidence_coverage"]
 
-        # Create claims
-        for claim_data in mock["claims"]:
-            claim = Claim(
-                analysis_id=analysis_id,
-                claim_text=claim_data["claim_text"] or input_content,
-                claim_type=claim_data["claim_type"],
-                verdict=claim_data["verdict"],
-                confidence=claim_data["confidence"],
-            )
-            session.add(claim)
-
-        # Create sources
-        for src_data in mock["sources"]:
+        # Create sources first so we have source IDs if needed
+        sources_created = []
+        for src_data in result_data.get("sources", []):
             source = Source(
                 analysis_id=analysis_id,
-                title=src_data["name"],
-                source_type=src_data["type"],
-                reliability_score=src_data["reliability"],
+                title=src_data.get("name"),
+                source_type=src_data.get("type"),
+                reliability_score=src_data.get("reliability", 0.8),
             )
             session.add(source)
+            sources_created.append(source)
 
-        # Create result
+        await session.flush()
+
+        # Create claims and attach evidence (signals)
+        primary_source_id = sources_created[0].id if sources_created else None
+        for claim_data in result_data.get("claims", []):
+            claim = Claim(
+                analysis_id=analysis_id,
+                claim_text=claim_data["claim_text"],
+                claim_type=claim_data.get("claim_type", "claim"),
+                verdict=claim_data.get("verdict", result_data["verdict"]),
+                confidence=claim_data.get("confidence", result_data["confidence"]),
+            )
+            session.add(claim)
+            await session.flush()
+
+            # Store signals/evidence linked to this claim
+            for signal_text in result_data.get("signals", []):
+                evidence_type = "warning"
+                if "✓" in signal_text or "Verified" in signal_text or "active" in signal_text or "found" in signal_text.lower():
+                    evidence_type = "support"
+                elif "CRITICAL" in signal_text or "Violation" in signal_text or "Insecure" in signal_text:
+                    evidence_type = "contradiction"
+
+                evidence = Evidence(
+                    claim_id=claim.id,
+                    source_id=primary_source_id,
+                    evidence_text=signal_text,
+                    evidence_type=evidence_type,
+                    support_score=1.0 if evidence_type == "support" else -1.0 if evidence_type == "contradiction" else 0.0,
+                )
+                session.add(evidence)
+
+        # Format reasons string for Result.explanation
+        reasons_list = result_data.get("reasons", [])
+        explanation_parts = []
+        for r in reasons_list:
+            if isinstance(r, dict):
+                rtype = r.get("type", "warning")
+                rtext = r.get("text", "")
+                explanation_parts.append(f"[{rtype}] {rtext}")
+            else:
+                explanation_parts.append(str(r))
+
         result = Result(
             analysis_id=analysis_id,
-            verdict=mock["verdict"],
-            confidence=mock["confidence"],
-            explanation="; ".join(r["text"] for r in mock["reasons"]),
-            recommendation=mock["recommendation"],
+            verdict=result_data["verdict"],
+            confidence=result_data["confidence"],
+            explanation="; ".join(explanation_parts),
+            recommendation=result_data.get("recommendation", ""),
         )
         session.add(result)
 
@@ -137,6 +190,6 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
 
     return {
         "id": analysis_id,
-        "verdict": mock["verdict"],
-        "confidence": mock["confidence"],
+        "verdict": result_data["verdict"],
+        "confidence": result_data["confidence"],
     }

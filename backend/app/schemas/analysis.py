@@ -37,6 +37,14 @@ class ReasonResponse(BaseModel):
     text: str
 
 
+class WebsiteDetails(BaseModel):
+    domain: str
+    https: bool = True
+    page_title: Optional[str] = None
+    risk_level: Optional[str] = None
+    signals: list[str] = []
+
+
 class AnalysisStartResponse(BaseModel):
     id: str
     status: str
@@ -56,6 +64,7 @@ class AnalysisResultResponse(BaseModel):
     reasons: list[ReasonResponse] = []
     sources: list[SourceResponse] = []
     recommendation: str = ""
+    website_details: Optional[WebsiteDetails] = None
 
 
 class HistoryItemResponse(BaseModel):

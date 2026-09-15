@@ -1,1 +1,5 @@
-# Analyzers package — will contain website_analyzer, text_analyzer, etc.
+"""Analyzers package for TruthGuard."""
+
+from app.analyzers.website_analyzer import analyze_website
+
+__all__ = ["analyze_website"]

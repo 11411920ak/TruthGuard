@@ -117,6 +117,116 @@ function Results() {
           </div>
         </div>
 
+        {/* Website Security Breakdown (for URL inputs) */}
+        {result.website_details && (
+          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #22d3ee' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                  🌐 Domain Security Profile
+                </div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
+                  {result.website_details.domain}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    background: result.website_details.https ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    color: result.website_details.https ? '#34d399' : '#f87171',
+                    border: `1px solid ${result.website_details.https ? 'rgba(52, 211, 153, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  }}
+                >
+                  {result.website_details.https ? '🔒 HTTPS Secure' : '⚠️ Insecure (HTTP)'}
+                </span>
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    background:
+                      result.website_details.risk_level === 'LOW'
+                        ? 'rgba(52, 211, 153, 0.15)'
+                        : result.website_details.risk_level === 'MODERATE'
+                        ? 'rgba(251, 191, 36, 0.15)'
+                        : result.website_details.risk_level === 'HIGH'
+                        ? 'rgba(251, 146, 60, 0.15)'
+                        : 'rgba(239, 68, 68, 0.15)',
+                    color:
+                      result.website_details.risk_level === 'LOW'
+                        ? '#34d399'
+                        : result.website_details.risk_level === 'MODERATE'
+                        ? '#fbbf24'
+                        : result.website_details.risk_level === 'HIGH'
+                        ? '#fb923c'
+                        : '#f87171',
+                  }}
+                >
+                  {result.website_details.risk_level} RISK
+                </span>
+              </div>
+            </div>
+
+            {/* Evaluated Security Signals */}
+            {result.website_details.signals && result.website_details.signals.length > 0 && (
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '8px', fontWeight: 500 }}>
+                  Safety & Fraud Signals Detected:
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {result.website_details.signals.map((sig, idx) => {
+                    const isPositive =
+                      sig.includes('✓') ||
+                      sig.toLowerCase().includes('active') ||
+                      sig.toLowerCase().includes('verified') ||
+                      sig.toLowerCase().includes('encryption') ||
+                      sig.toLowerCase().includes('transparency pages found')
+                    const isCritical =
+                      sig.toLowerCase().includes('critical') ||
+                      sig.toLowerCase().includes('violation') ||
+                      sig.toLowerCase().includes('insecure') ||
+                      sig.toLowerCase().includes('blocked')
+
+                    return (
+                      <span
+                        key={idx}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          background: isCritical
+                            ? 'rgba(239, 68, 68, 0.12)'
+                            : isPositive
+                            ? 'rgba(52, 211, 153, 0.1)'
+                            : 'rgba(251, 191, 36, 0.1)',
+                          border: `1px solid ${
+                            isCritical
+                              ? 'rgba(239, 68, 68, 0.25)'
+                              : isPositive
+                              ? 'rgba(52, 211, 153, 0.2)'
+                              : 'rgba(251, 191, 36, 0.2)'
+                          }`,
+                          color: isCritical ? '#fca5a5' : isPositive ? '#6ee7b7' : '#fde047',
+                        }}
+                      >
+                        {isCritical ? '🛑' : isPositive ? '🛡️' : '⚠️'} {sig}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Claims */}
         {result.claims && result.claims.length > 0 && (
           <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px' }}>
