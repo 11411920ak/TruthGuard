@@ -340,18 +340,60 @@ function Results() {
         {/* Sources */}
         {result.sources && result.sources.length > 0 && (
           <div className="glass-card fade-in-up-delay-2" style={{ padding: '24px', marginBottom: '20px' }}>
-            <div className="section-title">Sources ({result.sources.length})</div>
-            {result.sources.map((source, i) => (
-              <div key={i} className="source-item">
-                <span className="source-badge" style={{
-                  background: source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'
-                }}></span>
-                <div>
-                  <span className="source-name">{source.name}</span>
-                  <div style={{ fontSize: '0.75rem', color: '#475569', textTransform: 'capitalize' }}>{source.type}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <div className="section-title" style={{ marginBottom: '2px' }}>Independent Sources ({result.sources.length})</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Cross-referenced for credibility, stance, and evidence reliability
                 </div>
-                <span className="source-reliability">
-                  {Math.round(source.reliability * 100)}% reliable
+              </div>
+            </div>
+            {result.sources.map((source, i) => (
+              <div key={i} className="source-item" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 0', borderBottom: '1px solid rgba(52,211,153,0.06)' }}>
+                <span className="source-badge" style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  display: 'inline-block',
+                  background: source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171',
+                  boxShadow: `0 0 8px ${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}66`,
+                }}></span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span className="source-name" style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem' }}>{source.name}</span>
+                    <span style={{
+                      fontSize: '0.7rem',
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      background: 'rgba(255,255,255,0.05)',
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      {source.type}
+                    </span>
+                  </div>
+                  {source.url && (
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.75rem', color: '#22d3ee', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}
+                    >
+                      🔗 Verify Source ↗
+                    </a>
+                  )}
+                </div>
+                <span className="source-reliability" style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171',
+                  background: `${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}15`,
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  border: `1px solid ${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}33`,
+                }}>
+                  {Math.round(source.reliability * 100)}% reliability
                 </span>
               </div>
             ))}

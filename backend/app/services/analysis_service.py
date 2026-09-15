@@ -11,6 +11,7 @@ from app.models.database import Analysis, Claim, Source, Evidence, Result, get_s
 from app.config import get_settings
 from app.analyzers.website_analyzer import analyze_website
 from app.analyzers.claim_extractor import extract_claims
+from app.analyzers.evidence_engine import verify_claims_and_retrieve_evidence
 
 
 # ── Mock analysis data ──
@@ -93,47 +94,40 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
     else:
         # Run real Claim Extraction & Semantic Decomposition Engine
         extracted_claims = await extract_claims(input_content)
-        mock = _select_mock(input_content)
 
-        # Build claims list with atomic statements, entities, and types
-        processed_claims = []
+        # Run real Evidence Retrieval & Cross-Source Scoring Engine
+        evidence_result = await verify_claims_and_retrieve_evidence(extracted_claims, input_content)
+
+        # Build dynamic reasons based on extracted claims, entities, and sources
         all_entities = []
-        for ec in extracted_claims:
-            processed_claims.append({
-                "claim_text": ec["claim_text"],
-                "claim_type": ec.get("claim_type", "general claim"),
-                "entities": ec.get("entities", []),
-                "verdict": ec.get("verdict", mock["verdict"]),
-                "confidence": ec.get("confidence", mock["confidence"]),
-            })
+        for ec in evidence_result["claims"]:
             for ent in ec.get("entities", []):
                 if ent not in all_entities:
                     all_entities.append(ent)
 
-        # Build dynamic reasons based on extracted claims and entities
-        reasons = list(mock["reasons"])
-        if len(processed_claims) > 1:
+        reasons = list(evidence_result["reasons"])
+        if len(evidence_result["claims"]) > 1:
             reasons.insert(0, {
                 "type": "warning",
-                "text": f"Decomposed input into {len(processed_claims)} distinct testable claims for individual verification"
+                "text": f"Decomposed input into {len(evidence_result['claims'])} distinct testable claims for individual verification",
             })
         if all_entities:
             ent_sample = ", ".join(all_entities[:4])
             reasons.append({
                 "type": "support",
-                "text": f"Extracted key target entities: {ent_sample}"
+                "text": f"Target entities evaluated: {ent_sample}",
             })
 
         result_data = {
-            "verdict": mock["verdict"],
-            "confidence": mock["confidence"],
-            "risk_score": mock["risk_score"],
-            "evidence_coverage": mock["evidence_coverage"],
-            "claims": processed_claims,
-            "sources": mock["sources"],
+            "verdict": evidence_result["verdict"],
+            "confidence": evidence_result["confidence"],
+            "risk_score": evidence_result["risk_score"],
+            "evidence_coverage": evidence_result["evidence_coverage"],
+            "claims": evidence_result["claims"],
+            "sources": evidence_result["sources"],
             "reasons": reasons,
-            "signals": [r["text"] for r in reasons],
-            "recommendation": mock["recommendation"],
+            "signals": [r["text"] if isinstance(r, dict) else str(r) for r in reasons],
+            "recommendation": evidence_result["recommendation"],
         }
 
     async with session_factory() as session:
@@ -154,6 +148,7 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
                 analysis_id=analysis_id,
                 title=src_data.get("name"),
                 source_type=src_data.get("type"),
+                url=src_data.get("url"),
                 reliability_score=src_data.get("reliability", 0.8),
             )
             session.add(source)
