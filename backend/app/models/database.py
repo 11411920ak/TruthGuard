@@ -78,6 +78,7 @@ class Claim(Base):
     claim_type = Column(String(50), nullable=True)
     verdict = Column(String(20), nullable=True)
     confidence = Column(Float, nullable=True)
+    entities = Column(Text, nullable=True)  # JSON array of extracted entities
 
     # Relationships
     analysis = relationship("Analysis", back_populates="claims")
@@ -155,10 +156,16 @@ def get_session_factory(database_url: str):
 
 
 async def init_db(database_url: str):
-    """Create all tables."""
+    """Create all tables and run migrations if needed."""
     engine = get_engine(database_url)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Migrate existing tables if entities column is missing
+        try:
+            from sqlalchemy import text
+            await conn.execute(text("ALTER TABLE claims ADD COLUMN entities TEXT"))
+        except Exception:
+            pass  # Column already exists
 
 
 async def get_db(database_url: str):

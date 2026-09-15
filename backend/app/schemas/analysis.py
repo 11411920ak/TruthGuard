@@ -23,6 +23,7 @@ class ClaimResponse(BaseModel):
     claim_type: Optional[str] = None
     verdict: Optional[str] = None
     confidence: Optional[float] = None
+    entities: list[str] = []
 
 
 class SourceResponse(BaseModel):

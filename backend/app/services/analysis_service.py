@@ -4,11 +4,13 @@ Currently returns mock results. Will be replaced with real AI logic
 in later phases (claim extraction, evidence retrieval, scoring).
 """
 
+import json
 from datetime import datetime, timezone
 
 from app.models.database import Analysis, Claim, Source, Evidence, Result, get_session_factory
 from app.config import get_settings
 from app.analyzers.website_analyzer import analyze_website
+from app.analyzers.claim_extractor import extract_claims
 
 
 # ── Mock analysis data ──
@@ -89,25 +91,48 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
         # Run real website security and reputation analysis
         result_data = await analyze_website(input_content)
     else:
-        # Select appropriate mock for text claims (prior to Phase 6+ LLM/search integration)
+        # Run real Claim Extraction & Semantic Decomposition Engine
+        extracted_claims = await extract_claims(input_content)
         mock = _select_mock(input_content)
+
+        # Build claims list with atomic statements, entities, and types
+        processed_claims = []
+        all_entities = []
+        for ec in extracted_claims:
+            processed_claims.append({
+                "claim_text": ec["claim_text"],
+                "claim_type": ec.get("claim_type", "general claim"),
+                "entities": ec.get("entities", []),
+                "verdict": ec.get("verdict", mock["verdict"]),
+                "confidence": ec.get("confidence", mock["confidence"]),
+            })
+            for ent in ec.get("entities", []):
+                if ent not in all_entities:
+                    all_entities.append(ent)
+
+        # Build dynamic reasons based on extracted claims and entities
+        reasons = list(mock["reasons"])
+        if len(processed_claims) > 1:
+            reasons.insert(0, {
+                "type": "warning",
+                "text": f"Decomposed input into {len(processed_claims)} distinct testable claims for individual verification"
+            })
+        if all_entities:
+            ent_sample = ", ".join(all_entities[:4])
+            reasons.append({
+                "type": "support",
+                "text": f"Extracted key target entities: {ent_sample}"
+            })
+
         result_data = {
             "verdict": mock["verdict"],
             "confidence": mock["confidence"],
             "risk_score": mock["risk_score"],
             "evidence_coverage": mock["evidence_coverage"],
-            "claims": [
-                {
-                    "claim_text": c["claim_text"] or input_content,
-                    "claim_type": c["claim_type"],
-                    "verdict": c["verdict"],
-                    "confidence": c["confidence"],
-                }
-                for c in mock["claims"]
-            ],
+            "claims": processed_claims,
             "sources": mock["sources"],
-            "reasons": mock["reasons"],
-            "signals": [r["text"] for r in mock["reasons"]],
+            "reasons": reasons,
+            "signals": [r["text"] for r in reasons],
             "recommendation": mock["recommendation"],
         }
 
@@ -145,6 +170,7 @@ async def run_analysis(analysis_id: str, input_type: str, input_content: str) ->
                 claim_type=claim_data.get("claim_type", "claim"),
                 verdict=claim_data.get("verdict", result_data["verdict"]),
                 confidence=claim_data.get("confidence", result_data["confidence"]),
+                entities=json.dumps(claim_data.get("entities", [])),
             )
             session.add(claim)
             await session.flush()

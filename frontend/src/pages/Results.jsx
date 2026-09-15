@@ -230,16 +230,95 @@ function Results() {
         {/* Claims */}
         {result.claims && result.claims.length > 0 && (
           <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px' }}>
-            <div className="section-title">Extracted Claims</div>
-            {result.claims.map((claim) => (
-              <div key={claim.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(52,211,153,0.06)' }}>
-                <div>
-                  <p style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>"{claim.claim_text}"</p>
-                  <span style={{ fontSize: '0.75rem', color: '#475569' }}>{claim.claim_type}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <div className="section-title" style={{ marginBottom: '4px' }}>
+                  Extracted Claims ({result.claims.length})
                 </div>
-                <VerdictBadge verdict={claim.verdict} />
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Atomic propositions decomposed for individual verification
+                </div>
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {result.claims.map((claim, idx) => {
+                const claimTypeIcons = {
+                  'government announcement': '🏛️',
+                  'education & scholarship': '🎓',
+                  'financial promise': '💰',
+                  'health & medical': '🩺',
+                  'science & technology': '🔬',
+                  'law & public safety': '⚖️',
+                  'website safety': '🌐',
+                  'transport security': '🔒',
+                  'general claim': '📌',
+                }
+                const icon = claimTypeIcons[claim.claim_type?.toLowerCase()] || '📌'
+
+                return (
+                  <div
+                    key={claim.id || idx}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(52, 211, 153, 0.08)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#34d399', background: 'rgba(52, 211, 153, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+                          Claim {idx + 1}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                          {icon} {claim.claim_type}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {claim.confidence && (
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            {Math.round(claim.confidence)}% conf.
+                          </span>
+                        )}
+                        <VerdictBadge verdict={claim.verdict} />
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: '0.92rem', color: '#f1f5f9', lineHeight: 1.5, margin: 0 }}>
+                      "{claim.claim_text}"
+                    </p>
+
+                    {/* Extracted Entities */}
+                    {claim.entities && claim.entities.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b', alignSelf: 'center', marginRight: '4px' }}>
+                          Entities:
+                        </span>
+                        {claim.entities.map((ent, eIdx) => (
+                          <span
+                            key={eIdx}
+                            style={{
+                              fontSize: '0.72rem',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(34, 211, 238, 0.08)',
+                              border: '1px solid rgba(34, 211, 238, 0.2)',
+                              color: '#67e8f9',
+                            }}
+                          >
+                            🏷️ {ent}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 

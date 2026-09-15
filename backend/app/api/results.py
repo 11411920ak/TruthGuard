@@ -44,16 +44,26 @@ async def get_result(analysis_id: str):
             raise HTTPException(status_code=202, detail="Analysis still in progress")
 
         # Build response
-        claims = [
-            ClaimResponse(
-                id=c.id,
-                claim_text=c.claim_text,
-                claim_type=c.claim_type,
-                verdict=c.verdict,
-                confidence=c.confidence,
+        claims = []
+        for c in analysis.claims:
+            parsed_entities = []
+            if getattr(c, "entities", None):
+                try:
+                    import json
+                    parsed_entities = json.loads(c.entities)
+                except Exception:
+                    parsed_entities = [e.strip() for e in c.entities.split(",") if e.strip()]
+
+            claims.append(
+                ClaimResponse(
+                    id=c.id,
+                    claim_text=c.claim_text,
+                    claim_type=c.claim_type,
+                    verdict=c.verdict,
+                    confidence=c.confidence,
+                    entities=parsed_entities if isinstance(parsed_entities, list) else [],
+                )
             )
-            for c in analysis.claims
-        ]
 
         sources = [
             SourceResponse(
