@@ -55,23 +55,34 @@ async def extract_text_from_image_bytes(image_bytes: bytes) -> str:
         if image.mode not in ("RGB", "RGBA"):
             image = image.convert("RGBA")
 
-        # Attempt OCR
-        import winocr
-        result = await winocr.recognize_pil(image, "en")
-        extracted_text = result.text.strip() if result and result.text else ""
+        # Attempt OCR via native Windows OCR (winocr) first
+        try:
+            import winocr
+            result = await winocr.recognize_pil(image, "en")
+            extracted_text = result.text.strip() if result and result.text else ""
 
-        # If text is empty or very short, try contrast pre-processing
-        if len(extracted_text) < 5:
-            enhancer = ImageEnhance.Contrast(image.convert("L"))
-            enhanced = enhancer.enhance(2.0)
-            result_retry = await winocr.recognize_pil(enhanced.convert("RGBA"), "en")
-            if result_retry and result_retry.text:
-                extracted_text = result_retry.text.strip()
+            # If text is empty or very short, try contrast pre-processing
+            if len(extracted_text) < 5:
+                enhancer = ImageEnhance.Contrast(image.convert("L"))
+                enhanced = enhancer.enhance(2.0)
+                result_retry = await winocr.recognize_pil(enhanced.convert("RGBA"), "en")
+                if result_retry and result_retry.text:
+                    extracted_text = result_retry.text.strip()
 
-        return extracted_text
+            return extracted_text
+        except (ImportError, ModuleNotFoundError):
+            # Fallback to Tesseract OCR for Linux / Docker environments
+            try:
+                import pytesseract
+                extracted_text = pytesseract.image_to_string(image).strip()
+                return extracted_text
+            except Exception:
+                return ""
+        except Exception:
+            return ""
 
-    except Exception as e:
-        # Fallback if image format is corrupt or winocr fails
+    except Exception:
+        # Fallback if image format is corrupt
         return ""
 
 
