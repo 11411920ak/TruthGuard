@@ -97,10 +97,29 @@ async def analyze_screenshot_image(image_bytes: bytes, filename: str) -> dict:
     4. Decomposes text into atomic claims and cross-references evidence.
     5. Fuses claim & website signals into an authoritative verdict.
     """
-    # 1. OCR Text Extraction
+    # 1. AI Vision Claim Extraction (Gemini Vision) + Native OCR Fallback
+    gemini_vision_res = None
+    try:
+        from app.services.gemini import extract_claim_from_image
+        ext = filename.lower().split(".")[-1]
+        mime_type = "image/png" if ext == "png" else "image/webp" if ext == "webp" else "image/jpeg"
+        gemini_vision_res = extract_claim_from_image(image_bytes, mime_type)
+    except Exception:
+        pass
+
+    # Native Windows / Tesseract OCR Text Extraction
     ocr_text = await extract_text_from_image_bytes(image_bytes)
 
-    if not ocr_text or len(ocr_text.strip()) < 5:
+    gemini_claim = gemini_vision_res.get("claim", "") if gemini_vision_res else ""
+    gemini_raw_text = gemini_vision_res.get("raw_text", "") if gemini_vision_res else ""
+
+    combined_text = ocr_text
+    if gemini_claim:
+        combined_text = f"{gemini_claim}. {ocr_text}".strip()
+    elif gemini_raw_text and len(gemini_raw_text) > len(ocr_text):
+        combined_text = gemini_raw_text
+
+    if not combined_text or len(combined_text.strip()) < 5:
         # Unreadable image or no text detected
         return {
             "verdict": "UNVERIFIED",
@@ -108,6 +127,7 @@ async def analyze_screenshot_image(image_bytes: bytes, filename: str) -> dict:
             "risk_score": 50.0,
             "evidence_coverage": 10.0,
             "ocr_text": ocr_text or "[No legible text detected in image]",
+            "extracted_claim": None,
             "embedded_url": None,
             "website_details": None,
             "claims": [
@@ -130,7 +150,7 @@ async def analyze_screenshot_image(image_bytes: bytes, filename: str) -> dict:
         }
 
     # 2. Extract Embedded URLs
-    embedded_urls = extract_embedded_urls(ocr_text)
+    embedded_urls = extract_embedded_urls(f"{combined_text} {ocr_text}")
     primary_url = embedded_urls[0] if embedded_urls else None
 
     # 3. Analyze Embedded Website (if URL detected)
@@ -138,11 +158,15 @@ async def analyze_screenshot_image(image_bytes: bytes, filename: str) -> dict:
     if primary_url:
         website_res = await analyze_website(primary_url)
 
-    # 4. Decompose OCR Text into Atomic Claims
-    claims_list = await extract_claims(ocr_text)
+    # 4. Decompose Text into Atomic Claims & Cross-Reference Evidence
+    claims = await extract_claims(combined_text)
+    if not claims and gemini_claim:
+        claims = [{"claim_text": gemini_claim, "claim_type": "social claim", "entities": []}]
+    elif gemini_claim and not any(gemini_claim.lower() in c.get("claim_text", "").lower() for c in claims):
+        claims.insert(0, {"claim_text": gemini_claim, "claim_type": "social claim", "entities": []})
 
-    # 5. Verify Claims against Independent Sources
-    evidence_res = await verify_claims_and_retrieve_evidence(claims_list, ocr_text)
+    verification_res = await verify_claims_and_retrieve_evidence(claims, combined_text)
+    evidence_res = verification_res
 
     # 6. Fuse Claim Evidence + Website Security Assessment
     verdict = evidence_res["verdict"]
@@ -193,12 +217,27 @@ async def analyze_screenshot_image(image_bytes: bytes, filename: str) -> dict:
     else:
         recommendation = "The factual claims extracted from this screenshot are corroborated by independent reporting."
 
+    # If Gemini Vision extracted a claim, prepend AI vision reason
+    if gemini_claim:
+        reasons.insert(0, {
+            "type": "ai_synthesis",
+            "text": f"Gemini Vision Extracted Claim: \"{gemini_claim}\"",
+        })
+        sources.insert(0, {
+            "name": "Google Gemini Vision",
+            "type": "ai",
+            "url": "https://deepmind.google/technologies/gemini/",
+            "reliability": 0.95,
+        })
+
     return {
         "verdict": verdict,
         "confidence": confidence,
         "risk_score": risk_score,
         "evidence_coverage": evidence_res.get("evidence_coverage", 75.0),
         "ocr_text": ocr_text,
+        "extracted_claim": gemini_claim or (evidence_res["claims"][0]["claim_text"] if evidence_res.get("claims") else None),
+        "gemini_vision": bool(gemini_claim),
         "embedded_url": primary_url,
         "website_details": website_res,
         "claims": evidence_res["claims"],
