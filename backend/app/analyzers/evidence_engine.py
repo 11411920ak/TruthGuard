@@ -8,6 +8,7 @@ Implements:
 5. The UNVERIFIED Decision Rules (distinguishing FALSE from NOT PROVEN).
 """
 
+import asyncio
 import re
 import urllib.parse
 from typing import Optional
@@ -167,7 +168,23 @@ SUPPORT_PATTERNS = [
 ]
 
 
-def detect_evidence_stance(text: str) -> tuple[str, float]:
+def check_topical_overlap(text: str, query: str) -> bool:
+    """Verify that evidence text actually pertains to the subject matter of the query."""
+    if not query:
+        return True
+    stopwords = {
+        "what", "this", "that", "with", "from", "have", "been", "were", "yesterday", "today",
+        "tomorrow", "about", "there", "their", "where", "which", "claim", "fact", "check",
+        "news", "official", "fake", "true", "false", "verified", "report", "reports"
+    }
+    query_tokens = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{4,}\b", query) if w.lower() not in stopwords]
+    if not query_tokens:
+        return True
+    matches = sum(1 for t in query_tokens if t in text.lower())
+    return matches >= min(2, len(query_tokens))
+
+
+def detect_evidence_stance(text: str, query: str = "") -> tuple[str, float]:
     """
     Analyze text snippet for stance toward the target claim.
     Returns (stance, support_score):
@@ -175,6 +192,9 @@ def detect_evidence_stance(text: str) -> tuple[str, float]:
       - 'support', +0.6 to +1.0
       - 'warning', -0.2 to +0.2
     """
+    if query and not check_topical_overlap(text, query):
+        return "warning", 0.0
+
     text_lower = text.lower()
 
     contradict_count = sum(1 for p in CONTRADICTION_PATTERNS if re.search(p, text_lower))
@@ -190,45 +210,152 @@ def detect_evidence_stance(text: str) -> tuple[str, float]:
         return "warning", 0.0
 
 
-# ── Evidence Retrieval Pipeline ──
+# ── Multi-Channel Evidence Retrieval Pipeline ──
 
-async def query_web_evidence(query: str) -> list[dict]:
-    """
-    Query open web search for relevant evidence snippets.
-    Falls back gracefully if network is restricted or offline.
-    """
+async def query_google_fact_check(query: str, api_key: str) -> list[dict]:
+    """Query official Google Fact Check Tools API."""
+    if not api_key:
+        return []
+    results = []
+    try:
+        url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={urllib.parse.quote_plus(query)}&key={api_key}"
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(url)
+            if resp.status_code == 200:
+                data = resp.json()
+                for c in data.get("claims", [])[:3]:
+                    claim_text = c.get("text", "")
+                    for cr in c.get("claimReview", [])[:1]:
+                        publisher = cr.get("publisher", {}).get("name", "Official Fact-Checker")
+                        rating = cr.get("textualRating", "")
+                        cr_url = cr.get("url", "")
+                        domain = urllib.parse.urlparse(cr_url).hostname or ""
+                        rel, stype, _ = calculate_source_reliability(domain)
+
+                        rating_lower = rating.lower()
+                        if any(w in rating_lower for w in ["false", "fake", "hoax", "incorrect", "scam", "misleading", "fabricated"]):
+                            stance = "contradiction"
+                            s_score = -0.9
+                        elif any(w in rating_lower for w in ["true", "correct", "accurate"]):
+                            stance = "support"
+                            s_score = 0.9
+                        else:
+                            stance = "warning"
+                            s_score = -0.3
+
+                        results.append({
+                            "title": f"Fact Check: {claim_text[:80]}",
+                            "url": cr_url,
+                            "domain": domain,
+                            "publisher": publisher,
+                            "source_type": "fact-checker",
+                            "reliability": max(rel, 0.92),
+                            "snippet": f"Rating by {publisher}: {rating}. {claim_text}",
+                            "stance": stance,
+                            "support_score": s_score,
+                        })
+    except Exception:
+        pass
+    return results
+
+
+async def query_tavily_search(query: str, api_key: str) -> list[dict]:
+    """Query Tavily Deep Search for real-time fact-checking intelligence."""
+    if not api_key:
+        return []
+    results = []
+    try:
+        url = "https://api.tavily.com/search"
+        payload = {"api_key": api_key, "query": query, "max_results": 4}
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                for item in data.get("results", [])[:4]:
+                    title = item.get("title", "")
+                    snippet = item.get("content", "")
+                    url_str = item.get("url", "")
+                    domain = urllib.parse.urlparse(url_str).hostname or ""
+                    rel, stype, publisher = calculate_source_reliability(domain)
+                    stance, s_score = detect_evidence_stance(f"{title} {snippet}", query)
+                    results.append({
+                        "title": title,
+                        "url": url_str,
+                        "domain": domain,
+                        "publisher": publisher,
+                        "source_type": stype,
+                        "reliability": rel,
+                        "snippet": snippet[:250],
+                        "stance": stance,
+                        "support_score": s_score,
+                    })
+    except Exception:
+        pass
+    return results
+
+
+async def query_serper_search(query: str, api_key: str) -> list[dict]:
+    """Query Serper.dev for live Google search evidence."""
+    if not api_key:
+        return []
+    results = []
+    try:
+        url = "https://google.serper.dev/search"
+        headers = {"X-API-KEY": api_key, "Content-Type": "application/json"}
+        payload = {"q": query, "num": 4}
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                for item in data.get("organic", [])[:4]:
+                    title = item.get("title", "")
+                    snippet = item.get("snippet", "")
+                    url_str = item.get("link", "")
+                    domain = urllib.parse.urlparse(url_str).hostname or ""
+                    rel, stype, publisher = calculate_source_reliability(domain)
+                    stance, s_score = detect_evidence_stance(f"{title} {snippet}", query)
+                    results.append({
+                        "title": title,
+                        "url": url_str,
+                        "domain": domain,
+                        "publisher": publisher,
+                        "source_type": stype,
+                        "reliability": rel,
+                        "snippet": snippet,
+                        "stance": stance,
+                        "support_score": s_score,
+                    })
+    except Exception:
+        pass
+    return results
+
+
+async def query_duckduckgo_fallback(query: str) -> list[dict]:
+    """Fallback open web search when dedicated API quotas expire or are unset."""
     results = []
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TruthGuard-EvidenceRetriever/1.0"}
-
-    # Use DuckDuckGo HTML search for zero-configuration, keyless open web evidence
     encoded_query = urllib.parse.quote_plus(query)
     search_url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
-
     try:
         async with httpx.AsyncClient(timeout=4.0, headers=headers, follow_redirects=True) as client:
             resp = await client.get(search_url)
             if resp.status_code == 200:
                 from bs4 import BeautifulSoup
                 soup = BeautifulSoup(resp.text, "html.parser")
-                for result_div in soup.find_all("div", class_="result")[:5]:
+                for result_div in soup.find_all("div", class_="result")[:4]:
                     link_tag = result_div.find("a", class_="result__url")
                     title_tag = result_div.find("a", class_="result__title")
                     snippet_tag = result_div.find("a", class_="result__snippet")
-
                     if link_tag and snippet_tag:
-                        url = link_tag.get("href", "").strip()
+                        url_str = link_tag.get("href", "").strip()
                         title = title_tag.get_text(strip=True) if title_tag else "Web Evidence"
                         snippet = snippet_tag.get_text(strip=True)
-
-                        parsed = urllib.parse.urlparse(url)
-                        domain = parsed.hostname or ""
+                        domain = urllib.parse.urlparse(url_str).hostname or ""
                         rel, stype, publisher = calculate_source_reliability(domain)
-
-                        stance, s_score = detect_evidence_stance(f"{title} {snippet}")
-
+                        stance, s_score = detect_evidence_stance(f"{title} {snippet}", query)
                         results.append({
                             "title": title,
-                            "url": url,
+                            "url": url_str,
                             "domain": domain,
                             "publisher": publisher,
                             "source_type": stype,
@@ -238,10 +365,67 @@ async def query_web_evidence(query: str) -> list[dict]:
                             "support_score": s_score,
                         })
     except Exception:
-        # Fallback to local fact-checking index on network failure/timeout
         pass
-
     return results
+
+
+async def query_gemini_reasoning(claim: str, api_key: str) -> Optional[str]:
+    """Query Google Gemini (gemini-3.6-flash) for deep semantic truthfulness analysis."""
+    if not api_key:
+        return None
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+        prompt = (
+            f"Analyze this claim for truthfulness: '{claim}'. "
+            "Reply strictly with 1-2 concise factual sentences summarizing whether it is true, false, a scam, or unverified."
+        )
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception:
+        pass
+    return None
+
+
+async def query_web_evidence(query: str) -> list[dict]:
+    """
+    Unified multi-channel evidence retrieval.
+    Queries Google Fact Check, Tavily, Serper, and DuckDuckGo in parallel.
+    """
+    settings = get_settings()
+    tasks = []
+
+    # 1. Google Fact Check Tools API
+    if settings.google_fact_check_api_key:
+        tasks.append(query_google_fact_check(query, settings.google_fact_check_api_key))
+
+    # 2. Tavily Deep Search
+    if settings.tavily_api_key:
+        tasks.append(query_tavily_search(query, settings.tavily_api_key))
+
+    # 3. Serper Google Search
+    if settings.search_api_key:
+        tasks.append(query_serper_search(query, settings.search_api_key))
+
+    # Always include DuckDuckGo as auxiliary or fallback
+    tasks.append(query_duckduckgo_fallback(query))
+
+    gathered = await asyncio.gather(*tasks, return_exceptions=True)
+    all_results = []
+    seen_urls = set()
+
+    for item_list in gathered:
+        if isinstance(item_list, list):
+            for res in item_list:
+                url_key = res.get("url", "")
+                if url_key and url_key not in seen_urls:
+                    seen_urls.add(url_key)
+                    all_results.append(res)
+
+    return all_results
 
 
 # ── Cross-Source Verification Engine ──
@@ -337,6 +521,23 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
                 "text": f"{item['publisher']}: {item['snippet'][:120]}...",
             })
 
+    # 3.5 Deep AI Synthesis (Google Gemini) if AI_API_KEY is configured
+    settings = get_settings()
+    gemini_ai_insight = None
+    if settings.ai_api_key:
+        gemini_ai_insight = await query_gemini_reasoning(primary_claim, settings.ai_api_key)
+
+    # 3.6 Gemini semantic analysis integration
+    if gemini_ai_insight:
+        ai_lower = gemini_ai_insight.lower()
+        if any(w in ai_lower for w in ["unverified", "unconfirmed", "no evidence", "lack of evidence", "cannot be verified", "no supporting evidence"]):
+            if not official_contradict:
+                contradict_weight = 0.0
+        elif any(w in ai_lower for w in ["false", "scam", "hoax", "fake", "fabricated"]):
+            contradict_weight += 1.6
+        elif any(w in ai_lower for w in ["true", "confirmed", "legitimate", "accurate"]):
+            support_weight += 1.6
+
     # 4. Apply The UNVERIFIED Decision Rules (Phase 11 mandate)
     # Explicitly distinguish FALSE from NOT PROVEN
 
@@ -385,6 +586,13 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
             {"name": "Independent Web Search", "type": "general", "url": None, "reliability": 0.50},
             {"name": "Fact-Checking Registry", "type": "fact-checker", "url": None, "reliability": 0.90},
         ]
+
+    # Append Gemini synthesis insight if available
+    if gemini_ai_insight:
+        reasons_collected.append({
+            "type": "ai_synthesis",
+            "text": f"Google Gemini Analysis: {gemini_ai_insight}",
+        })
 
     # Deduplicate sources by name
     seen_names = set()
