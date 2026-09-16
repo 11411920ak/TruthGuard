@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     search_api_key: str = ""
     google_fact_check_api_key: str = ""
     tavily_api_key: str = ""
+    news_api_key: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:

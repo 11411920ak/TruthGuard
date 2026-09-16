@@ -330,6 +330,56 @@ async def query_serper_search(query: str, api_key: str) -> list[dict]:
     return results
 
 
+async def query_news_api(query: str, api_key: str) -> list[dict]:
+    """Query NewsAPI (https://newsapi.org) for live journalism and news reports."""
+    results = []
+    if not api_key:
+        return results
+    try:
+        url = "https://newsapi.org/v2/everything"
+        headers = {
+            "X-Api-Key": api_key,
+            "User-Agent": "TruthGuard-EvidenceRetriever/1.0",
+        }
+        params = {
+            "q": query,
+            "pageSize": 5,
+            "sortBy": "relevancy",
+            "language": "en",
+        }
+        async with httpx.AsyncClient(timeout=6.0, headers=headers) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code == 200:
+                data = resp.json()
+                for article in data.get("articles", []):
+                    title = article.get("title") or ""
+                    snippet = article.get("description") or article.get("content") or ""
+                    url_str = article.get("url") or ""
+                    source_name = article.get("source", {}).get("name") or "News Source"
+                    domain = urllib.parse.urlparse(url_str).hostname or ""
+                    rel, stype, publisher = calculate_source_reliability(domain)
+                    if publisher == "Unknown / Unclassified Source":
+                        publisher = source_name
+                        rel = 0.82
+                        stype = "news"
+                    combined_text = f"{title} {snippet}"
+                    stance, s_score = detect_evidence_stance(combined_text, query)
+                    results.append({
+                        "title": title,
+                        "url": url_str,
+                        "domain": domain,
+                        "publisher": publisher,
+                        "source_type": stype,
+                        "reliability": rel,
+                        "snippet": snippet,
+                        "stance": stance,
+                        "support_score": s_score,
+                    })
+    except Exception:
+        pass
+    return results
+
+
 async def query_duckduckgo_fallback(query: str) -> list[dict]:
     """Fallback open web search when dedicated API quotas expire or are unset."""
     results = []
@@ -393,7 +443,7 @@ async def query_gemini_reasoning(claim: str, api_key: str) -> Optional[str]:
 async def query_web_evidence(query: str) -> list[dict]:
     """
     Unified multi-channel evidence retrieval.
-    Queries Google Fact Check, Tavily, Serper, and DuckDuckGo in parallel.
+    Queries Google Fact Check, Tavily, Serper, NewsAPI, and DuckDuckGo in parallel.
     """
     settings = get_settings()
     tasks = []
@@ -409,6 +459,10 @@ async def query_web_evidence(query: str) -> list[dict]:
     # 3. Serper Google Search
     if settings.search_api_key:
         tasks.append(query_serper_search(query, settings.search_api_key))
+
+    # 4. NewsAPI Journalism Search
+    if settings.news_api_key:
+        tasks.append(query_news_api(query, settings.news_api_key))
 
     # Always include DuckDuckGo as auxiliary or fallback
     tasks.append(query_duckduckgo_fallback(query))

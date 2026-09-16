@@ -15,6 +15,7 @@ fact_check_key = os.getenv("GOOGLE_FACT_CHECK_API_KEY", "")
 serper_key = os.getenv("SEARCH_API_KEY", "")
 tavily_key = os.getenv("TAVILY_API_KEY", "")
 ai_key = os.getenv("AI_API_KEY", "")
+news_key = os.getenv("NEWS_API_KEY", "")
 
 test_query = "free laptop scheme"
 
@@ -102,3 +103,29 @@ try:
         print(f"❌ Gemini Error: {r.text[:300]}")
 except Exception as e:
     print(f"❌ ERROR: {e}")
+
+print("\n" + "=" * 60)
+print("5. Testing News API Key")
+print("=" * 60)
+try:
+    news_url = f"https://newsapi.org/v2/everything?q={test_query}&pageSize=3&sortBy=relevancy&language=en"
+    headers = {
+        "X-Api-Key": news_key,
+        "User-Agent": "TruthGuard-Tester/1.0",
+    }
+    r = httpx.get(news_url, headers=headers, timeout=10.0)
+    print(f"Status Code: {r.status_code}")
+    if r.status_code == 200:
+        data = r.json()
+        articles = data.get("articles", [])
+        print(f"✅ SUCCESS! Retrieved {len(articles)} live journalistic news articles.")
+        for i, art in enumerate(articles[:2]):
+            print(f"  [Article {i+1}]: {art.get('title')}")
+            print(f"    Publisher: {art.get('source', {}).get('name')}")
+            print(f"    Snippet: {(art.get('description') or '')[:100]}...")
+            print(f"    URL: {art.get('url')}")
+    else:
+        print(f"❌ FAILED: {r.text[:300]}")
+except Exception as e:
+    print(f"❌ ERROR: {e}")
+
