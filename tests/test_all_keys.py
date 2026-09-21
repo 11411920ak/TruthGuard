@@ -90,15 +90,15 @@ print("=" * 60)
 # Let's test if ai_key works with Google Gemini or OpenAI
 print(f"Key preview: {ai_key[:8]}... (length: {len(ai_key)})")
 
-# Try Google Gemini with AI_API_KEY using gemini-3.6-flash
+# Try Google Gemini with AI_API_KEY using gemini-flash-latest
 try:
-    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={ai_key}"
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={ai_key}"
     payload = {"contents": [{"parts": [{"text": "Is the claim 'Government gives free 5G recharge for 3 months to all users' true or false? Answer in 1 short sentence."}]}]}
     r = httpx.post(gemini_url, json=payload, timeout=12.0)
     print(f"Status Code: {r.status_code}")
     if r.status_code == 200:
         text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-        print(f"✅ SUCCESS! Gemini 3.6 Flash Response:\n   \"{text.strip()}\"")
+        print(f"✅ SUCCESS! Gemini Flash Response:\n   \"{text.strip()}\"")
     else:
         print(f"❌ Gemini Error: {r.text[:300]}")
 except Exception as e:

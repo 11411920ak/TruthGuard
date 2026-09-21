@@ -163,7 +163,7 @@ CONTRADICTION_PATTERNS = [
 SUPPORT_PATTERNS = [
     r"\b(officially\s+(announced|launched|approved|confirmed))\b",
     r"\b(cabinet\s+approves|government\s+launches|ministry\s+releases)\b",
-    r"\b(authentic|verified|official\s+notification\s+issued)\b",
+    r"\b(authentic|factually\s+verified|officially\s+verified|official\s+notification\s+issued)\b",
     r"\b(eligible\s+beneficiaries\s+can\s+apply)\b",
 ]
 
@@ -420,23 +420,28 @@ async def query_duckduckgo_fallback(query: str) -> list[dict]:
 
 
 async def query_gemini_reasoning(claim: str, api_key: str) -> Optional[str]:
-    """Query Google Gemini (gemini-3.6-flash) for deep semantic truthfulness analysis."""
+    """Query Google Gemini for deep semantic truthfulness analysis."""
     if not api_key:
         return None
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
-        prompt = (
-            f"Analyze this claim for truthfulness: '{claim}'. "
-            "Reply strictly with 1-2 concise factual sentences summarizing whether it is true, false, a scam, or unverified."
-        )
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.post(url, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
-    except Exception:
-        pass
+    for model in ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.8-flash", "gemini-2.5-flash"]:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            prompt = (
+                f"Analyze this claim for truthfulness: '{claim}'. "
+                "Reply strictly with 1-2 concise factual sentences summarizing whether it is true, false, a scam, or unverified."
+            )
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                resp = await client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        if parts and "text" in parts[0]:
+                            return parts[0]["text"].strip()
+        except Exception:
+            continue
     return None
 
 
@@ -584,7 +589,11 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
     # 3.6 Gemini semantic analysis integration
     if gemini_ai_insight:
         ai_lower = gemini_ai_insight.lower()
-        if any(w in ai_lower for w in ["unverified", "unconfirmed", "no evidence", "lack of evidence", "cannot be verified", "no supporting evidence"]):
+        if any(w in ai_lower for w in [
+            "unverified", "unconfirmed", "no evidence", "lack of evidence", "cannot be verified",
+            "no supporting evidence", "no credible news reports", "no credible reports",
+            "no official records", "no reports", "no record", "unsubstantiated", "not proven"
+        ]):
             if not official_contradict:
                 contradict_weight = 0.0
         elif any(w in ai_lower for w in ["false", "scam", "hoax", "fake", "fabricated"]):
@@ -605,7 +614,7 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
         confidence = 89.0
         risk_score = 15.0
         recommendation = "This claim is supported by reliable official/news reporting. Verify specific terms on the relevant official site."
-    elif len(sources_collected) >= 3 and support_weight > contradict_weight * 1.5:
+    elif len(sources_collected) >= 3 and support_weight >= 1.5 and support_weight > contradict_weight * 1.5:
         verdict = "LIKELY_TRUE"
         confidence = 78.0
         risk_score = 25.0

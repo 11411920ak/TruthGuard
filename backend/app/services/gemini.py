@@ -21,7 +21,7 @@ def extract_claim_from_image(image_bytes: bytes, mime_type: str = "image/jpeg") 
 
     b64_data = base64.b64encode(image_bytes).decode("utf-8")
 
-    for model in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"]:
+    for model in ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.8-flash", "gemini-2.5-flash"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         prompt = (
             "You are a specialized fact-checking claim extraction AI. "
@@ -113,7 +113,7 @@ CONFIDENCE: <number>
 RISK: <number>
 EXPLANATION: <text>
 """
-    for model in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"]:
+    for model in ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.8-flash", "gemini-2.5-flash"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         try:

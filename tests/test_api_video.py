@@ -5,7 +5,10 @@ import httpx
 from app.main import app
 from app.models.database import init_db
 from app.config import get_settings
-from tests.test_video_analyzer import create_test_video_bytes
+try:
+    from tests.test_video_analyzer import create_test_video_bytes
+except ImportError:
+    from test_video_analyzer import create_test_video_bytes
 
 
 @pytest.mark.asyncio
