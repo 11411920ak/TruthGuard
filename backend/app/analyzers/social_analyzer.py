@@ -187,10 +187,12 @@ def analyze_virality_and_manipulation(text: str) -> dict:
             break
 
     # 4. Fabricated authority appeals
-    for pat in UNVERIFIED_AUTHORITY_PATTERNS:
+        for pat in VIRAL_DISINFO_TROPES:
         if re.search(pat, text_lower):
-            score += 40.0
-            signals.append(f"Common viral disinfo trope detected: '{pat.replace(r'\\b', '')}'")
+            viral_score += 15
+            clean_trope = pat.replace(r"\b", "")
+            signals.append(f"Common viral disinfo trope detected: '{clean_trope}'")
+
             break
 
     normalized_score = min(100.0, score)
