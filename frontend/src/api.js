@@ -1,12 +1,8 @@
 import axios from 'axios'
 
-// Reads VITE_API_BASE_URL set in Vercel environment variables
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-  ? import.meta.env.VITE_API_BASE_URL + '/api'
-  : '/api'
-
+// All /api calls are proxied to Render backend via vercel.json rewrites
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
