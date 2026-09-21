@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
+// Reads VITE_API_BASE_URL set in Vercel environment variables
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? import.meta.env.VITE_API_BASE_URL + '/api'
   : '/api'
 
 const api = axios.create({
@@ -41,10 +42,8 @@ export async function analyzeVideo(file) {
   return response.data
 }
 
-// Results & History APIs
-
 export async function getResult(id) {
-  const response = await api.get(`/results/${id}`)
+  const response = await api.get('/results/' + id)
   return response.data
 }
 
@@ -58,8 +57,6 @@ export async function getHistoryStats() {
   return response.data
 }
 
-// Evaluation & Metrics APIs
-
 export async function getEvaluationMetrics() {
   const response = await api.get('/evaluation/metrics')
   return response.data
@@ -69,8 +66,6 @@ export async function runEvaluationBenchmark() {
   const response = await api.post('/evaluation/run')
   return response.data
 }
-
-// Health check
 
 export async function healthCheck() {
   const response = await api.get('/health')
