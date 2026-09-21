@@ -1,12 +1,12 @@
 """
-TruthGuard — FastAPI Backend
+TruthGuard - FastAPI Backend
 
 AI-Based Digital Content Verification & Scam Detection System.
 """
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
@@ -19,7 +19,6 @@ from app.schemas.analysis import HealthResponse
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     settings = get_settings()
-    # Create database tables on startup
     await init_db(settings.database_url)
     print("[OK] Database initialized")
     print(f"[TruthGuard] API running at http://{settings.host}:{settings.port}")
@@ -34,19 +33,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── CORS ──
+# CORS
 settings = get_settings()
+allow_all = settings.cors_origins_list == ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
+    allow_credentials=not allow_all,   # credentials=True is incompatible with wildcard
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Security Headers Middleware ──
+
+# Security Headers Middleware
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -55,7 +57,7 @@ async def add_security_headers(request, call_next):
     return response
 
 
-# ── Routes ──
+# Routes
 app.include_router(api_router)
 
 

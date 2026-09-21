@@ -15,7 +15,8 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = "dev-secret-key-change-in-production"
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    # Set CORS_ORIGINS="*" to allow all, or comma-separated list of origins
+    cors_origins: str = "*"
 
     # API Keys & External Fact-Checking Integrations
     ai_api_key: str = ""
@@ -26,6 +27,8 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
+        if self.cors_origins.strip() == "*":
+            return ["*"]
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
     model_config = {"env_file": ("backend/.env", ".env"), "env_file_encoding": "utf-8"}
