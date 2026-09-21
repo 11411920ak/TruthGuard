@@ -186,13 +186,12 @@ def analyze_virality_and_manipulation(text: str) -> dict:
             signals.append("Coercive chain forwarding demand detected ('Share with X contacts')")
             break
 
-    # 4. Fabricated authority appeals
-        for pat in VIRAL_DISINFO_TROPES:
+    # 4. Viral disinfo tropes
+    for pat in VIRAL_DISINFO_TROPES:
         if re.search(pat, text_lower):
-            viral_score += 15
+            score += 15
             clean_trope = pat.replace(r"\b", "")
             signals.append(f"Common viral disinfo trope detected: '{clean_trope}'")
-
             break
 
     normalized_score = min(100.0, score)
