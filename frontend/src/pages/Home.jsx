@@ -113,8 +113,8 @@ function Home() {
 
           {/* Input type indicator */}
           {input.trim() && (
-            <div style={{ marginBottom: '16px', fontSize: '0.8rem', color: '#64748b' }}>
-              Detected type: <span style={{ color: '#34d399', fontWeight: 600, textTransform: 'uppercase' }}>{inputType}</span>
+            <div style={{ marginBottom: '16px', fontSize: '0.8rem', color: 'rgba(234, 244, 244, 0.65)' }}>
+              Detected type: <span style={{ color: '#5AA9E6', fontWeight: 700, textTransform: 'uppercase' }}>{inputType}</span>
             </div>
           )}
 
@@ -149,9 +149,9 @@ function Home() {
       {/* Separator */}
       <div className="container-sm" style={{ textAlign: 'center', margin: '32px auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(52,211,153,0.1)' }}></div>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(90, 169, 230, 0.2)' }}></div>
           <span className="section-title" style={{ marginBottom: 0 }}>What do you want to verify?</span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(52,211,153,0.1)' }}></div>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(90, 169, 230, 0.2)' }}></div>
         </div>
       </div>
 

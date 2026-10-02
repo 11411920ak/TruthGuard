@@ -26,7 +26,7 @@ function Results() {
 
   if (loading) {
     return (
-      <div className="page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div className="page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#222831' }}>
         <div className="spinner"></div>
       </div>
     )
@@ -34,13 +34,13 @@ function Results() {
 
   if (error || !result) {
     return (
-      <div className="page">
+      <div className="page" style={{ backgroundColor: '#222831' }}>
         <div className="container-sm" style={{ textAlign: 'center' }}>
-          <div className="glass-card" style={{ padding: '48px', maxWidth: '500px', margin: '0 auto' }}>
+          <div className="glass-card" style={{ padding: '48px', maxWidth: '500px', margin: '0 auto', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '12px' }}>Result Not Found</h2>
-            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>{error || 'This analysis could not be found.'}</p>
-            <Link to="/" className="btn-primary" style={{ textDecoration: 'none' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '12px', color: '#EAF4F4' }}>Result Not Found</h2>
+            <p style={{ color: 'rgba(234, 244, 244, 0.65)', marginBottom: '24px' }}>{error || 'This analysis could not be found.'}</p>
+            <Link to="/" className="btn-primary" style={{ textDecoration: 'none', background: '#5AA9E6', color: '#222831' }}>
               ← Back to Home
             </Link>
           </div>
@@ -49,13 +49,6 @@ function Results() {
     )
   }
 
-  const verdictColor = {
-    LIKELY_TRUE: '#34d399',
-    LIKELY_FALSE: '#f87171',
-    UNVERIFIED: '#fbbf24',
-    SUSPICIOUS: '#fb923c',
-  }[result.verdict] || '#fbbf24'
-
   const verdictClass = {
     LIKELY_TRUE: 'likely-true',
     LIKELY_FALSE: 'likely-false',
@@ -63,65 +56,108 @@ function Results() {
     SUSPICIOUS: 'suspicious',
   }[result.verdict] || 'unverified'
 
-  const verdictEmoji = {
-    LIKELY_TRUE: '🟢',
-    LIKELY_FALSE: '🔴',
-    UNVERIFIED: '🟡',
-    SUSPICIOUS: '🟠',
-  }[result.verdict] || '🟡'
+  const verdictMarker = {
+    LIKELY_TRUE: '✓',
+    LIKELY_FALSE: '✕',
+    UNVERIFIED: '—',
+    SUSPICIOUS: '!',
+  }[result.verdict] || '•'
 
   return (
-    <div className="page">
+    <div className="page" style={{ backgroundColor: '#222831' }}>
       <div className="container-sm">
         {/* Back link */}
-        <Link to="/" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '24px' }}>
+        <Link
+          to="/"
+          style={{
+            color: 'rgba(234, 244, 244, 0.65)',
+            textDecoration: 'none',
+            fontSize: '0.85rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '24px',
+          }}
+        >
           ← Back to Home
         </Link>
 
         {/* Verdict Header */}
-        <div className={`result-header ${verdictClass} fade-in-up`}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>
+        <div
+          className={`result-header ${verdictClass} fade-in-up`}
+          style={{
+            background: '#1F3A5F',
+            border: '1px solid rgba(90, 169, 230, 0.25)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '0.75rem',
+              color: '#5AA9E6',
+              textTransform: 'uppercase',
+              letterSpacing: '1.8px',
+              fontWeight: 700,
+            }}
+          >
             Analysis Result
           </div>
-          <div className="verdict-large" style={{ color: verdictColor }}>
-            {verdictEmoji} {result.verdict.replace('_', ' ')}
+          <div className="verdict-large" style={{ color: '#EAF4F4' }}>
+            <span style={{ color: '#5AA9E6', marginRight: '8px' }}>{verdictMarker}</span>
+            {result.verdict.replace('_', ' ')}
           </div>
 
           {/* Stats */}
           <div className="stats-row">
-            <div className="stat-card">
-              <div className="stat-value" style={{ color: verdictColor }}>{result.confidence}%</div>
+            <div className="stat-card" style={{ background: '#222831', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
+              <div className="stat-value" style={{ color: '#5AA9E6' }}>{result.confidence}%</div>
               <div className="stat-label">Confidence</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-value" style={{ color: result.risk_score > 70 ? '#f87171' : result.risk_score > 40 ? '#fbbf24' : '#34d399' }}>
+            <div className="stat-card" style={{ background: '#222831', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
+              <div className="stat-value" style={{ color: '#EAF4F4' }}>
                 {result.risk_score}/100
               </div>
               <div className="stat-label">Risk Score</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-value" style={{ color: '#22d3ee' }}>{result.evidence_coverage}%</div>
+            <div className="stat-card" style={{ background: '#222831', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
+              <div className="stat-value" style={{ color: '#5AA9E6' }}>{result.evidence_coverage}%</div>
               <div className="stat-label">Evidence Coverage</div>
             </div>
           </div>
         </div>
 
         {/* Input Content */}
-        <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px' }}>
+        <div
+          className="glass-card fade-in-up-delay-1"
+          style={{
+            padding: '24px',
+            marginBottom: '20px',
+            background: '#1F3A5F',
+            border: '1px solid rgba(90, 169, 230, 0.2)',
+          }}
+        >
           <div className="section-title">Analyzed Content</div>
-          <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#cbd5e1' }}>
+          <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#EAF4F4' }}>
             {result.input_content}
           </p>
-          <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#475569' }}>
+          <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.6)' }}>
             Type: {result.input_type.toUpperCase()} • Analyzed on {new Date(result.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
         </div>
 
         {/* OCR Screenshot Inspection Card (for Image inputs) */}
         {(result.input_type === 'image' || result.ocr_text) && (
-          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #34d399' }}>
+          <div
+            className="glass-card fade-in-up-delay-1"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              borderLeft: '4px solid #5AA9E6',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.7)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
                 📸 Optical Character Recognition (OCR) Extracted Text
               </div>
               <span style={{
@@ -129,21 +165,21 @@ function Results() {
                 fontWeight: 600,
                 padding: '3px 10px',
                 borderRadius: '12px',
-                background: 'rgba(52, 211, 153, 0.15)',
-                color: '#34d399',
-                border: '1px solid rgba(52, 211, 153, 0.3)',
+                background: 'rgba(90, 169, 230, 0.15)',
+                color: '#5AA9E6',
+                border: '1px solid rgba(90, 169, 230, 0.35)',
               }}>
                 ✓ Native Windows OCR Processed
               </span>
             </div>
             <div style={{
-              background: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
+              background: '#222831',
+              border: '1px solid rgba(90, 169, 230, 0.15)',
               borderRadius: '8px',
               padding: '14px',
               fontFamily: 'monospace',
               fontSize: '0.88rem',
-              color: '#e2e8f0',
+              color: '#EAF4F4',
               lineHeight: 1.6,
               whiteSpace: 'pre-wrap',
             }}>
@@ -156,8 +192,8 @@ function Results() {
                 marginTop: '14px',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
+                background: 'rgba(34, 40, 49, 0.8)',
+                border: '1px solid rgba(90, 169, 230, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -166,8 +202,8 @@ function Results() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '1rem' }}>🔗</span>
-                  <span style={{ fontSize: '0.85rem', color: '#fca5a5', fontWeight: 500 }}>
-                    Embedded link detected in screenshot: <strong>{result.embedded_url}</strong>
+                  <span style={{ fontSize: '0.85rem', color: '#EAF4F4', fontWeight: 500 }}>
+                    Embedded link detected: <strong style={{ color: '#5AA9E6' }}>{result.embedded_url}</strong>
                   </span>
                 </div>
                 <span style={{
@@ -175,8 +211,8 @@ function Results() {
                   fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '4px',
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  color: '#f87171',
+                  background: 'rgba(90, 169, 230, 0.2)',
+                  color: '#5AA9E6',
                 }}>
                   Security Scanned
                 </span>
@@ -185,87 +221,54 @@ function Results() {
           </div>
         )}
 
-        {/* Social Media Forensics Card (for Social Media inputs or viral forwards) */}
+        {/* Social Media Forensics Card */}
         {result.social_details && (
-          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #a855f7' }}>
+          <div
+            className="glass-card fade-in-up-delay-1"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              borderLeft: '4px solid #5AA9E6',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
                   📱 Social Media Credibility & Viral Forensics
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-                  <span style={{ fontSize: '1.4rem' }}>
-                    {result.social_details.platform.includes('Twitter') ? '🐦' :
-                     result.social_details.platform.includes('WhatsApp') ? '💬' :
-                     result.social_details.platform.includes('Telegram') ? '✈️' :
-                     result.social_details.platform.includes('Instagram') ? '📸' :
-                     result.social_details.platform.includes('Reddit') ? '🔴' : '📱'}
-                  </span>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+                  <span style={{ fontSize: '1.4rem' }}>💬</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4' }}>
                     {result.social_details.platform}
                   </span>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                {/* Impersonation Risk Badge */}
                 <span
                   style={{
                     padding: '4px 12px',
                     borderRadius: '20px',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    background:
-                      result.social_details.impersonation_risk === 'HIGH'
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : result.social_details.impersonation_risk === 'MEDIUM'
-                        ? 'rgba(245, 158, 11, 0.15)'
-                        : result.social_details.impersonation_risk === 'LOW'
-                        ? 'rgba(52, 211, 153, 0.15)'
-                        : 'rgba(100, 116, 139, 0.15)',
-                    color:
-                      result.social_details.impersonation_risk === 'HIGH'
-                        ? '#f87171'
-                        : result.social_details.impersonation_risk === 'MEDIUM'
-                        ? '#fbbf24'
-                        : result.social_details.impersonation_risk === 'LOW'
-                        ? '#34d399'
-                        : '#94a3b8',
-                    border: `1px solid ${
-                      result.social_details.impersonation_risk === 'HIGH'
-                        ? 'rgba(239, 68, 68, 0.3)'
-                        : result.social_details.impersonation_risk === 'MEDIUM'
-                        ? 'rgba(245, 158, 11, 0.3)'
-                        : 'rgba(52, 211, 153, 0.3)'
-                    }`,
+                    background: '#222831',
+                    color: '#EAF4F4',
+                    border: '1px solid rgba(90, 169, 230, 0.3)',
                   }}
                 >
                   🎭 Impersonation: {result.social_details.impersonation_risk}
                 </span>
 
-                {/* Virality / Manipulation Level */}
                 <span
                   style={{
                     padding: '4px 12px',
                     borderRadius: '20px',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    background:
-                      result.social_details.manipulation_level === 'HIGH'
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : result.social_details.manipulation_level === 'MEDIUM'
-                        ? 'rgba(245, 158, 11, 0.15)'
-                        : 'rgba(52, 211, 153, 0.15)',
-                    color:
-                      result.social_details.manipulation_level === 'HIGH'
-                        ? '#f87171'
-                        : result.social_details.manipulation_level === 'MEDIUM'
-                        ? '#fbbf24'
-                        : '#34d399',
-                    border: `1px solid ${
-                      result.social_details.manipulation_level === 'HIGH'
-                        ? 'rgba(239, 68, 68, 0.3)'
-                        : 'rgba(245, 158, 11, 0.3)'
-                    }`,
+                    background: '#222831',
+                    color: '#5AA9E6',
+                    border: '1px solid rgba(90, 169, 230, 0.4)',
                   }}
                 >
                   ⚡ Manipulation: {result.social_details.manipulation_level} ({Math.round(result.social_details.manipulation_score)}%)
@@ -281,9 +284,9 @@ function Results() {
                   <span
                     key={`h-${idx}`}
                     style={{
-                      background: 'rgba(59, 130, 246, 0.12)',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                      color: '#60a5fa',
+                      background: 'rgba(90, 169, 230, 0.15)',
+                      border: '1px solid rgba(90, 169, 230, 0.3)',
+                      color: '#5AA9E6',
                       padding: '3px 10px',
                       borderRadius: '12px',
                       fontSize: '0.78rem',
@@ -297,9 +300,9 @@ function Results() {
                   <span
                     key={`ht-${idx}`}
                     style={{
-                      background: 'rgba(168, 85, 247, 0.12)',
-                      border: '1px solid rgba(168, 85, 247, 0.3)',
-                      color: '#c084fc',
+                      background: '#222831',
+                      border: '1px solid rgba(234, 244, 244, 0.2)',
+                      color: '#EAF4F4',
                       padding: '3px 10px',
                       borderRadius: '12px',
                       fontSize: '0.78rem',
@@ -324,9 +327,9 @@ function Results() {
                       gap: '8px',
                       padding: '8px 12px',
                       borderRadius: '6px',
-                      background: 'rgba(239, 68, 68, 0.08)',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      color: '#fca5a5',
+                      background: '#222831',
+                      border: '1px solid rgba(234, 244, 244, 0.3)',
+                      color: '#EAF4F4',
                       fontSize: '0.82rem',
                     }}
                   >
@@ -349,9 +352,9 @@ function Results() {
                       gap: '8px',
                       padding: '8px 12px',
                       borderRadius: '6px',
-                      background: 'rgba(245, 158, 11, 0.08)',
-                      border: '1px solid rgba(245, 158, 11, 0.2)',
-                      color: '#fde68a',
+                      background: '#222831',
+                      border: '1px solid rgba(90, 169, 230, 0.3)',
+                      color: '#5AA9E6',
                       fontSize: '0.82rem',
                     }}
                   >
@@ -361,68 +364,43 @@ function Results() {
                 ))}
               </div>
             )}
-
-            {/* Embedded Link Callout */}
-            {result.social_details.embedded_url && (
-              <div style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: 'rgba(34, 211, 238, 0.08)',
-                border: '1px solid rgba(34, 211, 238, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1rem' }}>🔗</span>
-                  <span style={{ fontSize: '0.85rem', color: '#67e8f9', fontWeight: 500 }}>
-                    Embedded link in post: <strong>{result.social_details.embedded_url}</strong>
-                  </span>
-                </div>
-                <span style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: 'rgba(34, 211, 238, 0.2)',
-                  color: '#22d3ee',
-                }}>
-                  Security Profile Below
-                </span>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Video Forensics & Keyframe Analysis Card (for Video inputs) */}
+        {/* Video Forensics & Keyframe Analysis Card */}
         {result.video_details && (
-          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #f43f5e' }}>
+          <div
+            className="glass-card fade-in-up-delay-1"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              borderLeft: '4px solid #5AA9E6',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
                   🎥 Video Temporal & Keyframe Forensics
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                   <span style={{ fontSize: '1.4rem' }}>🎬</span>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4' }}>
                     {result.video_details.filename}
                   </span>
                 </div>
               </div>
 
-              {/* Video Specs Badges */}
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{
                   padding: '4px 10px',
                   borderRadius: '16px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  background: 'rgba(244, 63, 94, 0.15)',
-                  color: '#fb7185',
-                  border: '1px solid rgba(244, 63, 94, 0.3)',
+                  background: '#222831',
+                  color: '#EAF4F4',
+                  border: '1px solid rgba(90, 169, 230, 0.3)',
                 }}>
                   ⏱️ {result.video_details.duration}s
                 </span>
@@ -431,9 +409,9 @@ function Results() {
                   borderRadius: '16px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  background: 'rgba(14, 165, 233, 0.15)',
-                  color: '#38bdf8',
-                  border: '1px solid rgba(14, 165, 233, 0.3)',
+                  background: '#222831',
+                  color: '#5AA9E6',
+                  border: '1px solid rgba(90, 169, 230, 0.4)',
                 }}>
                   📺 {result.video_details.resolution} @ {result.video_details.fps} FPS
                 </span>
@@ -442,129 +420,55 @@ function Results() {
                   borderRadius: '16px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  background: 'rgba(52, 211, 153, 0.15)',
-                  color: '#34d399',
-                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                  background: '#222831',
+                  color: '#5AA9E6',
+                  border: '1px solid rgba(90, 169, 230, 0.4)',
                 }}>
                   🔍 {result.video_details.keyframes_sampled} Frames Analyzed
-                </span>
-                <span style={{
-                  padding: '4px 10px',
-                  borderRadius: '16px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  background:
-                    result.video_details.sensationalism_level === 'HIGH'
-                      ? 'rgba(239, 68, 68, 0.15)'
-                      : result.video_details.sensationalism_level === 'MEDIUM'
-                      ? 'rgba(245, 158, 11, 0.15)'
-                      : 'rgba(52, 211, 153, 0.15)',
-                  color:
-                    result.video_details.sensationalism_level === 'HIGH'
-                      ? '#f87171'
-                      : result.video_details.sensationalism_level === 'MEDIUM'
-                      ? '#fbbf24'
-                      : '#34d399',
-                  border: `1px solid ${
-                    result.video_details.sensationalism_level === 'HIGH'
-                      ? 'rgba(239, 68, 68, 0.3)'
-                      : 'rgba(245, 158, 11, 0.3)'
-                  }`,
-                }}>
-                  ⚡ Sensationalism: {result.video_details.sensationalism_level} ({Math.round(result.video_details.sensationalism_score)}%)
                 </span>
               </div>
             </div>
 
             {/* On-Screen Text OCR Transcript */}
             <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', fontWeight: 600 }}>
                 Visual On-Screen Text & Subtitle OCR (Sampled Keyframes)
               </div>
               <div style={{
-                background: 'rgba(0, 0, 0, 0.25)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
+                background: '#222831',
+                border: '1px solid rgba(90, 169, 230, 0.15)',
                 borderRadius: '8px',
                 padding: '12px 16px',
                 fontFamily: 'monospace',
                 fontSize: '0.85rem',
-                color: '#e2e8f0',
+                color: '#EAF4F4',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
               }}>
                 {result.video_details.on_screen_text || '[No on-screen text overlays detected across sampled keyframes]'}
               </div>
             </div>
-
-            {/* Sensationalism Signals */}
-            {result.video_details.sensationalism_signals && result.video_details.sensationalism_signals.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-                {result.video_details.sensationalism_signals.map((sig, idx) => (
-                  <div
-                    key={`sens-${idx}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      background: 'rgba(244, 63, 94, 0.08)',
-                      border: '1px solid rgba(244, 63, 94, 0.2)',
-                      color: '#fda4af',
-                      fontSize: '0.82rem',
-                    }}
-                  >
-                    <span>⚠️</span>
-                    <span>{sig}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Embedded Link Callout */}
-            {result.video_details.embedded_url && (
-              <div style={{
-                marginTop: '10px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1rem' }}>🔗</span>
-                  <span style={{ fontSize: '0.85rem', color: '#fca5a5', fontWeight: 500 }}>
-                    On-Screen URL detected in video: <strong>{result.video_details.embedded_url}</strong>
-                  </span>
-                </div>
-                <span style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  color: '#f87171',
-                }}>
-                  Security Scanned Below
-                </span>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Website Security Breakdown (for URL inputs or screenshots with embedded URLs) */}
+        {/* Website Security Breakdown */}
         {result.website_details && (
-          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px', borderLeft: '4px solid #22d3ee' }}>
+          <div
+            className="glass-card fade-in-up-delay-1"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              borderLeft: '4px solid #5AA9E6',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
                   🌐 Domain Security Profile
                 </div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4', marginTop: '2px' }}>
                   {result.website_details.domain}
                 </div>
               </div>
@@ -575,9 +479,9 @@ function Results() {
                     borderRadius: '20px',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    background: result.website_details.https ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                    color: result.website_details.https ? '#34d399' : '#f87171',
-                    border: `1px solid ${result.website_details.https ? 'rgba(52, 211, 153, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    background: '#222831',
+                    color: '#5AA9E6',
+                    border: '1px solid #5AA9E6',
                   }}
                 >
                   {result.website_details.https ? '🔒 HTTPS Secure' : '⚠️ Insecure (HTTP)'}
@@ -588,22 +492,9 @@ function Results() {
                     borderRadius: '20px',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    background:
-                      result.website_details.risk_level === 'LOW'
-                        ? 'rgba(52, 211, 153, 0.15)'
-                        : result.website_details.risk_level === 'MODERATE'
-                        ? 'rgba(251, 191, 36, 0.15)'
-                        : result.website_details.risk_level === 'HIGH'
-                        ? 'rgba(251, 146, 60, 0.15)'
-                        : 'rgba(239, 68, 68, 0.15)',
-                    color:
-                      result.website_details.risk_level === 'LOW'
-                        ? '#34d399'
-                        : result.website_details.risk_level === 'MODERATE'
-                        ? '#fbbf24'
-                        : result.website_details.risk_level === 'HIGH'
-                        ? '#fb923c'
-                        : '#f87171',
+                    background: '#222831',
+                    color: '#EAF4F4',
+                    border: '1px solid rgba(234, 244, 244, 0.3)',
                   }}
                 >
                   {result.website_details.risk_level} RISK
@@ -614,52 +505,28 @@ function Results() {
             {/* Evaluated Security Signals */}
             {result.website_details.signals && result.website_details.signals.length > 0 && (
               <div>
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '8px', fontWeight: 500 }}>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(234, 244, 244, 0.7)', marginBottom: '8px', fontWeight: 500 }}>
                   Safety & Fraud Signals Detected:
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {result.website_details.signals.map((sig, idx) => {
-                    const isPositive =
-                      sig.includes('✓') ||
-                      sig.toLowerCase().includes('active') ||
-                      sig.toLowerCase().includes('verified') ||
-                      sig.toLowerCase().includes('encryption') ||
-                      sig.toLowerCase().includes('transparency pages found')
-                    const isCritical =
-                      sig.toLowerCase().includes('critical') ||
-                      sig.toLowerCase().includes('violation') ||
-                      sig.toLowerCase().includes('insecure') ||
-                      sig.toLowerCase().includes('blocked')
-
-                    return (
-                      <span
-                        key={idx}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '0.78rem',
-                          background: isCritical
-                            ? 'rgba(239, 68, 68, 0.12)'
-                            : isPositive
-                            ? 'rgba(52, 211, 153, 0.1)'
-                            : 'rgba(251, 191, 36, 0.1)',
-                          border: `1px solid ${
-                            isCritical
-                              ? 'rgba(239, 68, 68, 0.25)'
-                              : isPositive
-                              ? 'rgba(52, 211, 153, 0.2)'
-                              : 'rgba(251, 191, 36, 0.2)'
-                          }`,
-                          color: isCritical ? '#fca5a5' : isPositive ? '#6ee7b7' : '#fde047',
-                        }}
-                      >
-                        {isCritical ? '🛑' : isPositive ? '🛡️' : '⚠️'} {sig}
-                      </span>
-                    )
-                  })}
+                  {result.website_details.signals.map((sig, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '0.78rem',
+                        background: '#222831',
+                        border: '1px solid rgba(90, 169, 230, 0.25)',
+                        color: '#EAF4F4',
+                      }}
+                    >
+                      <span style={{ color: '#5AA9E6' }}>•</span> {sig}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
@@ -668,107 +535,108 @@ function Results() {
 
         {/* Claims */}
         {result.claims && result.claims.length > 0 && (
-          <div className="glass-card fade-in-up-delay-1" style={{ padding: '24px', marginBottom: '20px' }}>
+          <div
+            className="glass-card fade-in-up-delay-1"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <div className="section-title" style={{ marginBottom: '4px' }}>
                   Extracted Claims ({result.claims.length})
                 </div>
-                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(234, 244, 244, 0.65)' }}>
                   Atomic propositions decomposed for individual verification
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {result.claims.map((claim, idx) => {
-                const claimTypeIcons = {
-                  'government announcement': '🏛️',
-                  'education & scholarship': '🎓',
-                  'financial promise': '💰',
-                  'health & medical': '🩺',
-                  'science & technology': '🔬',
-                  'law & public safety': '⚖️',
-                  'website safety': '🌐',
-                  'transport security': '🔒',
-                  'general claim': '📌',
-                }
-                const icon = claimTypeIcons[claim.claim_type?.toLowerCase()] || '📌'
-
-                return (
-                  <div
-                    key={claim.id || idx}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(52, 211, 153, 0.08)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#34d399', background: 'rgba(52, 211, 153, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                          Claim {idx + 1}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
-                          {icon} {claim.claim_type}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {claim.confidence && (
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                            {Math.round(claim.confidence)}% conf.
-                          </span>
-                        )}
-                        <VerdictBadge verdict={claim.verdict} />
-                      </div>
+              {result.claims.map((claim, idx) => (
+                <div
+                  key={claim.id || idx}
+                  style={{
+                    background: '#222831',
+                    border: '1px solid rgba(90, 169, 230, 0.15)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#222831', background: '#5AA9E6', padding: '2px 8px', borderRadius: '6px' }}>
+                        Claim {idx + 1}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.7)', textTransform: 'capitalize' }}>
+                        {claim.claim_type}
+                      </span>
                     </div>
-
-                    <p style={{ fontSize: '0.92rem', color: '#f1f5f9', lineHeight: 1.5, margin: 0 }}>
-                      "{claim.claim_text}"
-                    </p>
-
-                    {/* Extracted Entities */}
-                    {claim.entities && claim.entities.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#64748b', alignSelf: 'center', marginRight: '4px' }}>
-                          Entities:
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {claim.confidence && (
+                        <span style={{ fontSize: '0.75rem', color: '#5AA9E6' }}>
+                          {Math.round(claim.confidence)}% conf.
                         </span>
-                        {claim.entities.map((ent, eIdx) => (
-                          <span
-                            key={eIdx}
-                            style={{
-                              fontSize: '0.72rem',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              background: 'rgba(34, 211, 238, 0.08)',
-                              border: '1px solid rgba(34, 211, 238, 0.2)',
-                              color: '#67e8f9',
-                            }}
-                          >
-                            🏷️ {ent}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                      )}
+                      <VerdictBadge verdict={claim.verdict} />
+                    </div>
                   </div>
-                )
-              })}
+
+                  <p style={{ fontSize: '0.92rem', color: '#EAF4F4', lineHeight: 1.5, margin: 0 }}>
+                    "{claim.claim_text}"
+                  </p>
+
+                  {/* Extracted Entities */}
+                  {claim.entities && claim.entities.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'rgba(234, 244, 244, 0.6)', alignSelf: 'center', marginRight: '4px' }}>
+                        Entities:
+                      </span>
+                      {claim.entities.map((ent, eIdx) => (
+                        <span
+                          key={eIdx}
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: 'rgba(90, 169, 230, 0.15)',
+                            border: '1px solid rgba(90, 169, 230, 0.3)',
+                            color: '#5AA9E6',
+                          }}
+                        >
+                          🏷️ {ent}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* Reasons / Evidence */}
         {result.reasons && result.reasons.length > 0 && (
-          <div className="glass-card fade-in-up-delay-2" style={{ padding: '24px', marginBottom: '20px' }}>
+          <div
+            className="glass-card fade-in-up-delay-2"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div className="section-title">Why This Verdict?</div>
             {result.reasons.map((reason, i) => (
-              <div key={i} className="evidence-item">
+              <div key={i} className="evidence-item" style={{ background: '#222831', border: '1px solid rgba(90, 169, 230, 0.15)' }}>
                 <span className="evidence-icon">
-                  {reason.type === 'contradiction' ? '❌' : reason.type === 'support' ? '✅' : '⚠️'}
+                  {reason.type === 'contradiction' ? '✕' : reason.type === 'support' ? '✓' : '!'}
                 </span>
                 <span className="evidence-text">{reason.text}</span>
               </div>
@@ -778,34 +646,42 @@ function Results() {
 
         {/* Sources */}
         {result.sources && result.sources.length > 0 && (
-          <div className="glass-card fade-in-up-delay-2" style={{ padding: '24px', marginBottom: '20px' }}>
+          <div
+            className="glass-card fade-in-up-delay-2"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              border: '1px solid rgba(90, 169, 230, 0.2)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <div className="section-title" style={{ marginBottom: '2px' }}>Independent Sources ({result.sources.length})</div>
-                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(234, 244, 244, 0.65)' }}>
                   Cross-referenced for credibility, stance, and evidence reliability
                 </div>
               </div>
             </div>
             {result.sources.map((source, i) => (
-              <div key={i} className="source-item" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 0', borderBottom: '1px solid rgba(52,211,153,0.06)' }}>
+              <div key={i} className="source-item" style={{ background: '#222831', border: '1px solid rgba(90, 169, 230, 0.15)', display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', borderRadius: '10px', marginBottom: '8px' }}>
                 <span className="source-badge" style={{
-                  width: '10px',
-                  height: '10px',
+                  width: '8px',
+                  height: '8px',
                   borderRadius: '50%',
                   display: 'inline-block',
-                  background: source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171',
-                  boxShadow: `0 0 8px ${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}66`,
+                  background: '#5AA9E6',
+                  boxShadow: '0 0 6px rgba(90, 169, 230, 0.6)',
                 }}></span>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span className="source-name" style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem' }}>{source.name}</span>
+                    <span className="source-name" style={{ fontWeight: 600, color: '#EAF4F4', fontSize: '0.9rem' }}>{source.name}</span>
                     <span style={{
                       fontSize: '0.7rem',
                       padding: '1px 6px',
                       borderRadius: '4px',
-                      background: 'rgba(255,255,255,0.05)',
-                      color: '#94a3b8',
+                      background: 'rgba(234, 244, 244, 0.08)',
+                      color: 'rgba(234, 244, 244, 0.7)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}>
@@ -817,7 +693,7 @@ function Results() {
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: '0.75rem', color: '#22d3ee', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}
+                      style={{ fontSize: '0.75rem', color: '#5AA9E6', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}
                     >
                       🔗 Verify Source ↗
                     </a>
@@ -826,11 +702,11 @@ function Results() {
                 <span className="source-reliability" style={{
                   fontSize: '0.8rem',
                   fontWeight: 600,
-                  color: source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171',
-                  background: `${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}15`,
+                  color: '#5AA9E6',
+                  background: 'rgba(90, 169, 230, 0.15)',
                   padding: '4px 10px',
                   borderRadius: '12px',
-                  border: `1px solid ${source.reliability >= 0.85 ? '#34d399' : source.reliability >= 0.6 ? '#fbbf24' : '#f87171'}33`,
+                  border: '1px solid rgba(90, 169, 230, 0.3)',
                 }}>
                   {Math.round(source.reliability * 100)}% reliability
                 </span>
@@ -841,9 +717,17 @@ function Results() {
 
         {/* Recommendation */}
         {result.recommendation && (
-          <div className="glass-card fade-in-up-delay-3" style={{ padding: '24px', marginBottom: '20px', borderColor: `${verdictColor}33` }}>
+          <div
+            className="glass-card fade-in-up-delay-3"
+            style={{
+              padding: '24px',
+              marginBottom: '20px',
+              background: '#1F3A5F',
+              border: '1px solid rgba(90, 169, 230, 0.25)',
+            }}
+          >
             <div className="section-title">Recommendation</div>
-            <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#cbd5e1' }}>
+            <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#EAF4F4' }}>
               {result.recommendation}
             </p>
           </div>
@@ -851,11 +735,11 @@ function Results() {
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '32px' }}>
-          <Link to="/" className="btn-primary" style={{ textDecoration: 'none' }}>
+          <Link to="/" className="btn-primary" style={{ textDecoration: 'none', background: '#5AA9E6', color: '#222831' }}>
             🔍 New Analysis
           </Link>
-          <Link to="/history" className="btn-secondary" style={{ textDecoration: 'none' }}>
-            📋 View History
+          <Link to="/history" className="btn-secondary" style={{ textDecoration: 'none', background: '#1F3A5F', color: '#EAF4F4' }}>
+            📋 View Dashboard
           </Link>
         </div>
       </div>

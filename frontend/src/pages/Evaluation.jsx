@@ -46,7 +46,7 @@ function Evaluation() {
 
   if (loading) {
     return (
-      <div className="page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <div className="page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', backgroundColor: '#222831' }}>
         <div className="spinner"></div>
       </div>
     )
@@ -57,15 +57,15 @@ function Evaluation() {
   const perClass = metrics.per_class || {}
 
   return (
-    <div className="page">
+    <div className="page" style={{ backgroundColor: '#222831' }}>
       <div className="container">
         {/* Header with Run Action */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
           <div>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '6px' }}>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '6px', color: '#EAF4F4' }}>
               Model <span className="gradient-text">Evaluation</span> & Benchmarks
             </h1>
-            <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
+            <p style={{ color: 'rgba(234, 244, 244, 0.7)', fontSize: '0.95rem' }}>
               Academic-grade classification performance, 4x4 confusion matrix, and multi-modal benchmarks
             </p>
           </div>
@@ -74,7 +74,16 @@ function Evaluation() {
             onClick={handleRunBenchmark}
             disabled={running}
             className="btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '0.9rem' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 22px',
+              fontSize: '0.9rem',
+              background: '#5AA9E6',
+              color: '#222831',
+              fontWeight: 700,
+            }}
           >
             {running ? (
               <>
@@ -83,7 +92,7 @@ function Evaluation() {
               </>
             ) : (
               <>
-                <span>▶️</span>
+                <span>▶</span>
                 <span>Run Live Benchmark</span>
               </>
             )}
@@ -98,77 +107,76 @@ function Evaluation() {
           marginBottom: '28px',
         }}>
           {/* Accuracy */}
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid #34d399' }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+          <div className="glass-card" style={{ padding: '20px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)', borderLeft: '4px solid #5AA9E6' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
               Overall Accuracy
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#34d399', margin: '4px 0' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#EAF4F4', margin: '4px 0', fontFamily: 'Outfit' }}>
               {metrics.accuracy ?? 0}%
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.78rem', color: '#5AA9E6', fontWeight: 500 }}>
               {data?.total_evaluated || 0} benchmark ground-truth test cases
             </div>
           </div>
 
           {/* Macro F1 */}
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid #38bdf8' }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+          <div className="glass-card" style={{ padding: '20px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)', borderLeft: '4px solid #5AA9E6' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
               Macro F1-Score
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#38bdf8', margin: '4px 0' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#5AA9E6', margin: '4px 0', fontFamily: 'Outfit' }}>
               {metrics.macro_f1 ?? 0}%
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(234, 244, 244, 0.6)' }}>
               Harmonic mean of precision & recall
             </div>
           </div>
 
           {/* Macro Precision */}
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid #a855f7' }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+          <div className="glass-card" style={{ padding: '20px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)', borderLeft: '4px solid rgba(234, 244, 244, 0.4)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
               Macro Precision
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#c084fc', margin: '4px 0' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#EAF4F4', margin: '4px 0', fontFamily: 'Outfit' }}>
               {metrics.macro_precision ?? 0}%
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.78rem', color: '#5AA9E6' }}>
               Low false positive rate across classes
             </div>
           </div>
 
           {/* Macro Recall */}
-          <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid #f59e0b' }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+          <div className="glass-card" style={{ padding: '20px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)', borderLeft: '4px solid #5AA9E6' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(234, 244, 244, 0.65)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
               Macro Recall
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fbbf24', margin: '4px 0' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#5AA9E6', margin: '4px 0', fontFamily: 'Outfit' }}>
               {metrics.macro_recall ?? 0}%
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(234, 244, 244, 0.6)' }}>
               High detection rate of scam & truth claims
             </div>
           </div>
         </div>
 
         {/* 4x4 Confusion Matrix Section */}
-        <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
+        <div className="glass-card" style={{ padding: '24px', marginBottom: '28px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4' }}>
                 4×4 Confusion Matrix
               </h3>
-              <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
+              <p style={{ color: 'rgba(234, 244, 244, 0.65)', fontSize: '0.82rem' }}>
                 Rows represent Ground-Truth Actual class; Columns represent Predicted classification
               </p>
             </div>
             <span style={{
               fontSize: '0.75rem',
-              color: '#34d399',
-              background: 'rgba(52, 211, 153, 0.12)',
-              border: '1px solid rgba(52, 211, 153, 0.25)',
+              color: '#222831',
+              background: '#5AA9E6',
               padding: '3px 10px',
               borderRadius: '12px',
-              fontWeight: 600,
+              fontWeight: 700,
             }}>
               Diagonal = Correct Predictions
             </span>
@@ -178,11 +186,11 @@ function Evaluation() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '0.85rem' }}>
               <thead>
                 <tr>
-                  <th style={{ padding: '12px', background: 'rgba(0,0,0,0.3)', color: '#94a3b8', textAlign: 'left' }}>
+                  <th style={{ padding: '12px', background: '#222831', color: 'rgba(234, 244, 244, 0.6)', textAlign: 'left' }}>
                     Actual \ Predicted
                   </th>
                   {CLASSES.map((c) => (
-                    <th key={`head-${c}`} style={{ padding: '12px', background: 'rgba(0,0,0,0.3)', color: '#cbd5e1' }}>
+                    <th key={`head-${c}`} style={{ padding: '12px', background: '#222831', color: '#EAF4F4' }}>
                       {CLASS_LABELS[c]}
                     </th>
                   ))}
@@ -190,8 +198,8 @@ function Evaluation() {
               </thead>
               <tbody>
                 {CLASSES.map((actual) => (
-                  <tr key={`row-${actual}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', background: 'rgba(0,0,0,0.15)' }}>
+                  <tr key={`row-${actual}`} style={{ borderBottom: '1px solid rgba(90, 169, 230, 0.1)' }}>
+                    <td style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#EAF4F4', background: '#222831' }}>
                       {CLASS_LABELS[actual]}
                     </td>
                     {CLASSES.map((pred) => {
@@ -200,14 +208,14 @@ function Evaluation() {
                       const hasCount = count > 0
 
                       let cellBg = 'transparent'
-                      let cellColor = '#64748b'
+                      let cellColor = 'rgba(234, 244, 244, 0.3)'
 
                       if (isDiag && hasCount) {
-                        cellBg = 'rgba(52, 211, 153, 0.15)'
-                        cellColor = '#34d399'
+                        cellBg = 'rgba(90, 169, 230, 0.18)'
+                        cellColor = '#5AA9E6'
                       } else if (!isDiag && hasCount) {
-                        cellBg = 'rgba(239, 68, 68, 0.15)'
-                        cellColor = '#f87171'
+                        cellBg = '#222831'
+                        cellColor = '#EAF4F4'
                       }
 
                       return (
@@ -219,7 +227,7 @@ function Evaluation() {
                             fontSize: '1rem',
                             background: cellBg,
                             color: cellColor,
-                            border: isDiag && hasCount ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid transparent',
+                            border: isDiag && hasCount ? '1px solid #5AA9E6' : '1px solid transparent',
                           }}
                         >
                           {count}
@@ -234,14 +242,14 @@ function Evaluation() {
         </div>
 
         {/* Per-Class Detailed Performance Table */}
-        <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', marginBottom: '16px' }}>
+        <div className="glass-card" style={{ padding: '24px', marginBottom: '28px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4', marginBottom: '16px' }}>
             Per-Class Classification Report
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+                <tr style={{ borderBottom: '1px solid rgba(90, 169, 230, 0.2)', color: 'rgba(234, 244, 244, 0.65)' }}>
                   <th style={{ padding: '10px' }}>Verdict Category</th>
                   <th style={{ padding: '10px' }}>Support</th>
                   <th style={{ padding: '10px' }}>Precision</th>
@@ -256,25 +264,25 @@ function Evaluation() {
                 {CLASSES.map((c) => {
                   const item = perClass[c] || {}
                   return (
-                    <tr key={`stat-${c}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <tr key={`stat-${c}`} style={{ borderBottom: '1px solid rgba(90, 169, 230, 0.1)' }}>
                       <td style={{ padding: '12px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <VerdictBadge verdict={c} />
                       </td>
-                      <td style={{ padding: '12px 10px', color: '#f8fafc', fontWeight: 600 }}>
+                      <td style={{ padding: '12px 10px', color: '#EAF4F4', fontWeight: 600 }}>
                         {item.support ?? 0}
                       </td>
-                      <td style={{ padding: '12px 10px', color: '#38bdf8', fontWeight: 600 }}>
+                      <td style={{ padding: '12px 10px', color: '#5AA9E6', fontWeight: 600 }}>
                         {item.precision ?? 0}%
                       </td>
-                      <td style={{ padding: '12px 10px', color: '#fbbf24', fontWeight: 600 }}>
+                      <td style={{ padding: '12px 10px', color: '#EAF4F4', fontWeight: 600 }}>
                         {item.recall ?? 0}%
                       </td>
-                      <td style={{ padding: '12px 10px', color: '#34d399', fontWeight: 700 }}>
+                      <td style={{ padding: '12px 10px', color: '#5AA9E6', fontWeight: 700 }}>
                         {item.f1_score ?? 0}%
                       </td>
-                      <td style={{ padding: '12px 10px', color: '#94a3b8' }}>{item.tp ?? 0}</td>
-                      <td style={{ padding: '12px 10px', color: '#94a3b8' }}>{item.fp ?? 0}</td>
-                      <td style={{ padding: '12px 10px', color: '#94a3b8' }}>{item.fn ?? 0}</td>
+                      <td style={{ padding: '12px 10px', color: 'rgba(234, 244, 244, 0.7)' }}>{item.tp ?? 0}</td>
+                      <td style={{ padding: '12px 10px', color: 'rgba(234, 244, 244, 0.7)' }}>{item.fp ?? 0}</td>
+                      <td style={{ padding: '12px 10px', color: 'rgba(234, 244, 244, 0.7)' }}>{item.fn ?? 0}</td>
                     </tr>
                   )
                 })}
@@ -285,71 +293,58 @@ function Evaluation() {
 
         {/* Item-Level Evaluation Audit Log */}
         {data?.item_results && data.item_results.length > 0 && (
-          <div className="glass-card" style={{ padding: '24px' }}>
+          <div className="glass-card" style={{ padding: '24px', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EAF4F4' }}>
                   Benchmark Test Execution Log
                 </h3>
-                <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
+                <p style={{ color: 'rgba(234, 244, 244, 0.65)', fontSize: '0.82rem' }}>
                   Detailed test verification output for each ground-truth item
                 </p>
               </div>
-              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+              <span style={{ fontSize: '0.8rem', color: '#5AA9E6' }}>
                 Average Latency: <strong>{data.average_latency_ms}ms</strong> | Total Time: <strong>{data.total_duration_sec}s</strong>
               </span>
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table className="history-table">
-                <thead>
-                  <tr>
-                    <th>Item ID</th>
-                    <th>Type</th>
-                    <th>Content Preview</th>
-                    <th>Expected</th>
-                    <th>Predicted</th>
-                    <th>Status</th>
-                    <th>Latency</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.item_results.map((item) => (
-                    <tr key={item.id}>
-                      <td style={{ fontFamily: 'monospace', color: '#94a3b8', fontSize: '0.78rem' }}>
-                        {item.id}
-                      </td>
-                      <td style={{ textTransform: 'uppercase', fontSize: '0.75rem', color: '#38bdf8' }}>
-                        {item.input_type}
-                      </td>
-                      <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e2e8f0', fontSize: '0.82rem' }}>
-                        {item.content}
-                      </td>
-                      <td>
-                        <VerdictBadge verdict={item.expected} />
-                      </td>
-                      <td>
-                        <VerdictBadge verdict={item.predicted} />
-                      </td>
-                      <td>
-                        <span style={{
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          background: item.is_correct ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: item.is_correct ? '#34d399' : '#f87171',
-                        }}>
-                          {item.is_correct ? '✓ Match' : '✗ Mismatch'}
-                        </span>
-                      </td>
-                      <td style={{ color: '#94a3b8', fontSize: '0.78rem', textAlign: 'right' }}>
-                        {item.latency_ms}ms
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+              {data.item_results.map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: '#222831',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    border: '1px solid rgba(90, 169, 230, 0.1)',
+                  }}
+                >
+                  <div style={{ flex: 1, marginRight: '16px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#EAF4F4', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '600px' }}>
+                      {item.content}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'rgba(234, 244, 244, 0.55)', marginTop: '4px' }}>
+                      Ground Truth: <strong style={{ color: '#EAF4F4' }}>{CLASS_LABELS[item.actual]}</strong> • Predicted: <strong style={{ color: item.correct ? '#5AA9E6' : '#EAF4F4' }}>{CLASS_LABELS[item.predicted]}</strong>
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      background: item.correct ? 'rgba(90, 169, 230, 0.18)' : '#1F3A5F',
+                      color: item.correct ? '#5AA9E6' : '#EAF4F4',
+                      border: `1px solid ${item.correct ? '#5AA9E6' : 'rgba(234, 244, 244, 0.3)'}`,
+                    }}
+                  >
+                    {item.correct ? '✓ MATCH' : '✕ MISMATCH'}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

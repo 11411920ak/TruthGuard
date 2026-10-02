@@ -85,13 +85,13 @@ function Analyze() {
 
   if (error) {
     return (
-      <div className="page">
+      <div className="page" style={{ backgroundColor: '#222831' }}>
         <div className="container-sm" style={{ textAlign: 'center' }}>
-          <div className="glass-card" style={{ padding: '48px', maxWidth: '500px', margin: '0 auto' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>❌</div>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '12px' }}>Analysis Failed</h2>
-            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>{error}</p>
-            <button className="btn-primary" onClick={() => navigate('/')}>
+          <div className="glass-card" style={{ padding: '48px', maxWidth: '500px', margin: '0 auto', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✕</div>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '12px', color: '#EAF4F4' }}>Analysis Failed</h2>
+            <p style={{ color: 'rgba(234, 244, 244, 0.7)', marginBottom: '24px' }}>{error}</p>
+            <button className="btn-primary" onClick={() => navigate('/')} style={{ background: '#5AA9E6', color: '#222831' }}>
               ← Try Again
             </button>
           </div>
@@ -101,18 +101,18 @@ function Analyze() {
   }
 
   return (
-    <div className="page">
+    <div className="page" style={{ backgroundColor: '#222831' }}>
       <div className="container-sm" style={{ textAlign: 'center' }}>
         {/* Analysis info */}
         <div className="fade-in-up">
-          <div className="glass-card" style={{ padding: '24px', marginBottom: '40px', display: 'inline-block' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div className="glass-card" style={{ padding: '24px', marginBottom: '40px', display: 'inline-block', background: '#1F3A5F', border: '1px solid rgba(90, 169, 230, 0.25)' }}>
+            <span style={{ fontSize: '0.75rem', color: '#5AA9E6', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
               Analyzing {type}
             </span>
             <p style={{
               marginTop: '8px',
               fontSize: '0.9rem',
-              color: '#cbd5e1',
+              color: '#EAF4F4',
               maxWidth: '500px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -141,19 +141,20 @@ function Analyze() {
                 borderRadius: '10px',
                 marginBottom: '4px',
                 background: index === currentStep
-                  ? 'rgba(52, 211, 153, 0.08)'
+                  ? 'rgba(90, 169, 230, 0.15)'
                   : 'transparent',
-                opacity: index <= currentStep ? 1 : 0.3,
-                transition: 'all 0.4s ease',
+                border: index === currentStep ? '1px solid rgba(90, 169, 230, 0.3)' : '1px solid transparent',
+                opacity: index <= currentStep ? 1 : 0.4,
+                transition: 'all 0.3s ease',
               }}
             >
-              <span style={{ fontSize: '1.1rem', width: '28px', textAlign: 'center' }}>
-                {index < currentStep ? '✅' : step.icon}
+              <span style={{ fontSize: '1.1rem', width: '28px', textAlign: 'center', color: '#5AA9E6' }}>
+                {index < currentStep ? '✓' : step.icon}
               </span>
               <span style={{
                 fontSize: '0.9rem',
-                fontWeight: index === currentStep ? 600 : 400,
-                color: index === currentStep ? '#34d399' : '#94a3b8',
+                fontWeight: index === currentStep ? 700 : 500,
+                color: index === currentStep ? '#5AA9E6' : '#EAF4F4',
               }}>
                 {step.label}
               </span>
