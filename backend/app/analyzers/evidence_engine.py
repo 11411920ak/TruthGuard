@@ -9,7 +9,6 @@ Implements:
 """
 
 import asyncio
-import json
 import re
 import urllib.parse
 from typing import Optional
@@ -54,7 +53,7 @@ MAJOR_NEWS_DOMAINS = {
 
 OFFICIAL_GOV_DOMAINS = {
     "gov.in", "nic.in", "mygov.in", "india.gov.in", "pib.gov.in", "rbi.org.in",
-    "gov", "who.int", "nasa.gov", "un.org", "europa.eu", "cdc.gov", "esa.int", "isro.gov.in"
+    "gov", "who.int", "nasa.gov", "un.org", "europa.eu", "cdc.gov"
 }
 
 
@@ -141,11 +140,6 @@ def calculate_source_reliability(domain: str) -> tuple[float, str, str]:
         if nd in domain_clean:
             return rel, "news", name
 
-    if any(k in domain_clean for k in ["reuters", "bbc", "cnn", "theguardian", "ndtv", "space.com", "spaceflight", "phys.org", "sciencedaily"]):
-        return 0.84, "news", domain_clean.title()
-    elif any(k in domain_clean for k in ["news", "times", "post", "tribune", "express", "herald", "telegraph"]):
-        return 0.78, "news", domain_clean.title()
-
     # Check academic/educational
     if domain_clean.endswith((".edu", ".ac.in", ".edu.au", ".ac.uk")):
         return 0.90, "academic", f"{domain_clean} (Academic)"
@@ -161,24 +155,16 @@ def calculate_source_reliability(domain: str) -> tuple[float, str, str]:
 
 CONTRADICTION_PATTERNS = [
     r"\b(fake|false|hoax|misleading|debunked|scam|fraudulent|busted|fabricated|untrue|baseless)\b",
-    r"\b(no\s+such\s+(scheme|announcement|notification|order|grant|statement))\b",
+    r"\b(no\s+such\s+(scheme|announcement|notification|order|grant))\b",
     r"\b(warns?\s+against|beware\s+of|clarifies\s+(that\s+)?no|fact\s+check\s*:\s*false)\b",
-    r"\b(not\s+(true|confirmed|official|approved|authentic))\b",
-    r"\b(denies|refutes|dismisses\s+claim)\b",
+    r"\b(not\s+(true|confirmed|official|approved))\b",
 ]
 
 SUPPORT_PATTERNS = [
-    r"\b(officially\s+(announced|launched|approved|confirmed|held|signed))\b",
-    r"\b(cabinet\s+approves|government\s+launches|ministry\s+releases|isro\s+launches|successfully\s+launched)\b",
+    r"\b(officially\s+(announced|launched|approved|confirmed))\b",
+    r"\b(cabinet\s+approves|government\s+launches|ministry\s+releases)\b",
     r"\b(authentic|factually\s+verified|officially\s+verified|official\s+notification\s+issued)\b",
-    r"\b(eligible\s+beneficiaries\s+can\s+apply|press\s+release|official\s+statement)\b",
-    r"\b(confirmed\s+by|reported\s+by|according\s+to\s+(the\s+)?official|successfully\s+completed|successfully\s+landed)\b",
-]
-
-SCAM_PATTERNS = [
-    r"\b(free\s+recharge|free\s+money|lottery\s+winner|claim\s+prize|urgent\s+kyc|share\s+with\s+\d+|forward\s+to\s+\d+|100%\s+free|instant\s+cash|unconditional\s+grant)\b",
-    r"\b(guarantee\s+returns|click\s+here\s+to\s+claim|limited\s+time\s+subsidy)\b",
-    r"\b(http://[a-zA-Z0-9\-\.]+\.(?:xyz|top|buzz|club|online|site))\b",
+    r"\b(eligible\s+beneficiaries\s+can\s+apply)\b",
 ]
 
 
@@ -224,125 +210,6 @@ def detect_evidence_stance(text: str, query: str = "") -> tuple[str, float]:
         return "warning", 0.0
 
 
-def classify_source_stance_nlp(snippet: str, title: str, domain: str, claim: str) -> tuple[str, str]:
-    """NLP-based stance classifier for evidence snippets against a claim."""
-    text = f"{title} {snippet}".lower()
-
-    stopwords = {
-        "what", "this", "that", "with", "from", "have", "been", "were", "yesterday", "today",
-        "tomorrow", "about", "there", "their", "where", "which", "claim", "fact", "check",
-        "news", "official", "fake", "true", "false", "verified", "report", "reports"
-    }
-
-    # If this is a fact-checker rating snippet like "Rating by X: False. <claim>"
-    # Ensure the debunked assertion matches this specific claim before flagging contradiction
-    if "rating by" in text and any(w in text for w in ["false", "fake", "hoax", "incorrect", "misleading"]):
-        claim_clean = re.sub(r"\b(fact\s+check|debunk|verify)\b", "", claim, flags=re.I).strip()
-        claim_tokens = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{4,}\b", claim_clean) if w.lower() not in stopwords]
-        matches = sum(1 for t in claim_tokens if t in text)
-        if claim_tokens and matches < max(2, int(len(claim_tokens) * 0.6)):
-            return "neutral", "Fact check reviews an extraneous or tangential sub-claim"
-
-    for pat in CONTRADICTION_PATTERNS:
-        m = re.search(pat, text)
-        if m:
-            return "contradiction", f"Contradiction marker detected: '{m.group(0)}'"
-
-    for pat in SUPPORT_PATTERNS:
-        m = re.search(pat, text)
-        if m:
-            return "support", f"Confirmation marker detected: '{m.group(0)}'"
-
-    claim_words = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{4,}\b", claim) if w.lower() not in stopwords]
-    if not claim_words:
-        return "neutral", "Insufficient topical words in claim"
-
-    # Specific entities check (proper nouns / capitalized words in original claim)
-    capitalized_entities = [w.lower() for w in re.findall(r"\b[A-Z][a-z0-9]+\b", claim) if w.lower() not in stopwords]
-    if capitalized_entities:
-        has_entity = any(ent in text for ent in capitalized_entities)
-        if not has_entity:
-            return "neutral", "Evidence lacks primary named entities from claim"
-
-    matches = sum(1 for w in claim_words if w in text)
-    min_required = max(3, int(len(claim_words) * 0.5)) if len(claim_words) >= 4 else len(claim_words)
-    if matches >= min_required:
-        rel, stype, _ = calculate_source_reliability(domain)
-        if stype in ("official", "news", "fact-checker", "academic") and rel >= 0.75:
-            return "support", f"Authoritative {stype} source reports on the claim topic consistently"
-        elif rel >= 0.55:
-            return "support", "Independent source reports corroborating subject matter"
-
-    return "neutral", "Insufficient corroboration or contradiction in snippet"
-
-
-async def classify_evidence_sources_with_llm(
-    claim: str,
-    sources: list[dict],
-    api_key: str
-) -> Optional[list[dict]]:
-    """
-    Step 1: LLM call that labels each source supporting/contradicting/neutral with JSON parsing.
-    Logs raw output, confirms JSON parses correctly, avoids silent failure.
-    """
-    if not api_key or not sources:
-        return None
-
-    sources_summary = []
-    for idx, s in enumerate(sources[:10]):
-        sources_summary.append(
-            f"Source [{idx}]:\n  Publisher: {s.get('publisher') or s.get('name')}\n  Title: {s.get('title')}\n  Snippet: {s.get('snippet')}"
-        )
-    sources_text = "\n\n".join(sources_summary)
-
-    prompt = (
-        f"You are a rigorous fact-check evidence classification engine.\n"
-        f"Claim to verify: \"{claim}\"\n\n"
-        f"Analyze each source below and determine whether it supports, contradicts, or is neutral towards the claim.\n"
-        f"IMPORTANT CLASSIFICATION RULES:\n"
-        f"1. Label 'supporting' if the source confirms, corroborates, or reports the specific claim as true.\n"
-        f"2. Label 'contradicting' ONLY if the source directly refutes, denies, or debunks the specific claim (e.g. calls it fake, false, a hoax, or disproves it).\n"
-        f"3. If a fact-check source is debunking a DIFFERENT viral rumor or detail (e.g. debunking a video or watermark, but confirming the underlying event occurred), do NOT label it as contradicting the event.\n"
-        f"4. Label 'neutral' if the source discusses an unrelated event, a different location, a secondary rumor, or does not directly prove or disprove this specific claim.\n\n"
-        f"{sources_text}\n\n"
-        f"Return strictly a JSON array with one object per source in the format:\n"
-        f"[\n"
-        f"  {{\"index\": 0, \"stance\": \"supporting\", \"confidence\": 0.95, \"rationale\": \"...\"}},\n"
-        f"  {{\"index\": 1, \"stance\": \"contradicting\", \"confidence\": 0.90, \"rationale\": \"...\"}},\n"
-        f"  {{\"index\": 2, \"stance\": \"neutral\", \"confidence\": 0.50, \"rationale\": \"...\"}}\n"
-        f"]\n"
-        f"Valid stance values are ONLY: \"supporting\", \"contradicting\", or \"neutral\". Do not include any explanation outside the JSON."
-    )
-
-    models = ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.8-flash"]
-    for model in models:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-            payload = {"contents": [{"parts": [{"text": prompt}]}]}
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.post(url, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidates = data.get("candidates", [])
-                    if candidates and "content" in candidates[0]:
-                        parts = candidates[0]["content"].get("parts", [])
-                        if parts and "text" in parts[0]:
-                            raw_text = parts[0]["text"].strip()
-                            json_str = raw_text
-                            if "```json" in json_str:
-                                json_str = json_str.split("```json", 1)[1].split("```", 1)[0].strip()
-                            elif "```" in json_str:
-                                json_str = json_str.split("```", 1)[1].split("```", 1)[0].strip()
-
-                            parsed = json.loads(json_str)
-                            if isinstance(parsed, list):
-                                return parsed
-        except Exception:
-            continue
-
-    return None
-
-
 # ── Multi-Channel Evidence Retrieval Pipeline ──
 
 async def query_google_fact_check(query: str, api_key: str) -> list[dict]:
@@ -356,22 +223,8 @@ async def query_google_fact_check(query: str, api_key: str) -> list[dict]:
             resp = await client.get(url)
             if resp.status_code == 200:
                 data = resp.json()
-                stopwords = {
-                    "what", "this", "that", "with", "from", "have", "been", "were", "yesterday", "today",
-                    "tomorrow", "about", "there", "their", "where", "which", "claim", "fact", "check",
-                    "news", "official", "fake", "true", "false", "verified", "report", "reports"
-                }
-                clean_query = re.sub(r"\b(fact\s+check|debunk|verify)\b", "", query, flags=re.I).strip()
-                query_tokens = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{4,}\b", clean_query) if w.lower() not in stopwords]
-
                 for c in data.get("claims", [])[:3]:
                     claim_text = c.get("text", "")
-                    # Ensure the fact check actually addresses the query topic
-                    if query_tokens:
-                        matches = sum(1 for t in query_tokens if t in claim_text.lower())
-                        if matches < max(2, int(len(query_tokens) * 0.5)):
-                            continue
-
                     for cr in c.get("claimReview", [])[:1]:
                         publisher = cr.get("publisher", {}).get("name", "Official Fact-Checker")
                         rating = cr.get("textualRating", "")
@@ -397,7 +250,7 @@ async def query_google_fact_check(query: str, api_key: str) -> list[dict]:
                             "publisher": publisher,
                             "source_type": "fact-checker",
                             "reliability": max(rel, 0.92),
-                            "snippet": f"Rating by {publisher}: {rating}. Claim reviewed: {claim_text}",
+                            "snippet": f"Rating by {publisher}: {rating}. {claim_text}",
                             "stance": stance,
                             "support_score": s_score,
                         })
@@ -570,7 +423,7 @@ async def query_gemini_reasoning(claim: str, api_key: str) -> Optional[str]:
     """Query Google Gemini for deep semantic truthfulness analysis."""
     if not api_key:
         return None
-    for model in ["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"]:
+    for model in ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.8-flash", "gemini-2.5-flash"]:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             prompt = (
@@ -578,7 +431,7 @@ async def query_gemini_reasoning(claim: str, api_key: str) -> Optional[str]:
                 "Reply strictly with 1-2 concise factual sentences summarizing whether it is true, false, a scam, or unverified."
             )
             payload = {"contents": [{"parts": [{"text": prompt}]}]}
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -690,134 +543,91 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
     primary_claim = extracted_claims[0]["claim_text"] if extracted_claims else raw_content
     search_results = await query_web_evidence(f"{primary_claim[:100]} fact check")
 
-    if len(search_results) < 3:
+    if not search_results:
         # Secondary targeted search without 'fact check' suffix
-        secondary_results = await query_web_evidence(primary_claim[:100])
-        seen_urls = {r.get("url") for r in search_results if r.get("url")}
-        for sr in secondary_results:
-            if sr.get("url") not in seen_urls:
-                seen_urls.add(sr.get("url"))
-                search_results.append(sr)
+        search_results = await query_web_evidence(primary_claim[:100])
 
-    # 3. Evidence classification step (LLM call that labels each source supporting/contradicting/neutral)
-    settings = get_settings()
-    llm_classifications = None
-    if settings.ai_api_key and search_results:
-        llm_classifications = await classify_evidence_sources_with_llm(
-            primary_claim, search_results, settings.ai_api_key
-        )
-
-    llm_map = {}
-    if llm_classifications:
-        for item in llm_classifications:
-            idx = item.get("index")
-            st = str(item.get("stance", "")).lower()
-            if "support" in st:
-                llm_map[idx] = "support"
-            elif "contradict" in st:
-                llm_map[idx] = "contradiction"
-            elif "neutral" in st:
-                llm_map[idx] = "neutral"
-
+    # 3. Source Reliability & Cross-Source Agreement Computation
     sources_collected = []
     reasons_collected = []
-    officialSourceConfirms = 0
-    reputableSourceAgreement = 0
-    supportingSources = 0
-    contradictingSources = 0
-    officialContradict = 0
+    support_weight = 0.0
+    contradict_weight = 0.0
+    official_support = False
+    official_contradict = False
 
-    for idx, item in enumerate(search_results):
-        domain = item.get("domain", "")
-        rel = item.get("reliability", 0.5)
-        stype = item.get("source_type", "general")
-        pub = item.get("publisher", "Web Source")
-        title = item.get("title", "")
-        snippet = item.get("snippet", "")
-
-        # Check LLM classification first, fallback to NLP stance detection
-        if idx in llm_map:
-            stance = llm_map[idx]
-        else:
-            stance, _ = classify_source_stance_nlp(snippet, title, domain, primary_claim)
-
+    for item in search_results:
         sources_collected.append({
-            "name": pub,
-            "type": stype,
-            "url": item.get("url"),
-            "reliability": rel,
-            "stance": stance,
+            "name": item["publisher"],
+            "type": item["source_type"],
+            "url": item["url"],
+            "reliability": item["reliability"],
         })
 
-        if stance == "support":
-            supportingSources += 1
-            if stype == "official":
-                officialSourceConfirms += 1
-            if stype in ("official", "fact-checker", "news", "academic") and rel >= 0.75:
-                reputableSourceAgreement += 1
-            reasons_collected.append({
-                "type": "support",
-                "text": f"{pub}: {snippet[:120]}...",
-            })
-        elif stance == "contradiction":
-            contradictingSources += 1
-            if stype == "official":
-                officialContradict += 1
+        if item["stance"] == "contradiction":
+            contradict_weight += item["reliability"]
+            if item["source_type"] == "official":
+                official_contradict = True
             reasons_collected.append({
                 "type": "contradiction",
-                "text": f"{pub}: {snippet[:120]}...",
+                "text": f"{item['publisher']}: {item['snippet'][:120]}...",
+            })
+        elif item["stance"] == "support":
+            support_weight += item["reliability"]
+            if item["source_type"] == "official":
+                official_support = True
+            reasons_collected.append({
+                "type": "support",
+                "text": f"{item['publisher']}: {item['snippet'][:120]}...",
             })
 
-    # Count scam indicators in content
-    scamIndicatorCount = 0
-    for pat in SCAM_PATTERNS:
-        if re.search(pat, content_lower):
-            scamIndicatorCount += 1
+    # 3.5 Deep AI Synthesis (Google Gemini) if AI_API_KEY is configured
+    settings = get_settings()
+    gemini_ai_insight = None
+    if settings.ai_api_key:
+        gemini_ai_insight = await query_gemini_reasoning(primary_claim, settings.ai_api_key)
 
-    totalEvaluated = supportingSources + contradictingSources
-    crossSourceAgreementRatio = (supportingSources / totalEvaluated) if totalEvaluated > 0 else 0.0
+    # 3.6 Gemini semantic analysis integration
+    if gemini_ai_insight:
+        ai_lower = gemini_ai_insight.lower()
+        if any(w in ai_lower for w in [
+            "unverified", "unconfirmed", "no evidence", "lack of evidence", "cannot be verified",
+            "no supporting evidence", "no credible news reports", "no credible reports",
+            "no official records", "no reports", "no record", "unsubstantiated", "not proven"
+        ]):
+            if not official_contradict:
+                contradict_weight = 0.0
+        elif any(w in ai_lower for w in ["false", "scam", "hoax", "fake", "fabricated"]):
+            contradict_weight += 1.6
+        elif any(w in ai_lower for w in ["true", "confirmed", "legitimate", "accurate"]):
+            support_weight += 1.6
 
-    # Scoring formula calculation
-    base_score = 50.0
-    support_score = (officialSourceConfirms * 30.0) + (reputableSourceAgreement * 15.0) + (supportingSources * 8.0)
-    agreement_score = (crossSourceAgreementRatio - 0.5) * 40.0 if totalEvaluated > 0 else 0.0
-    contradiction_penalty = (contradictingSources * 35.0) + (officialContradict * 20.0)
-    scam_penalty = scamIndicatorCount * 30.0
+    # 4. Apply The UNVERIFIED Decision Rules (Phase 11 mandate)
+    # Explicitly distinguish FALSE from NOT PROVEN
 
-    score = base_score + support_score + agreement_score - contradiction_penalty - scam_penalty
-    score = max(0.0, min(100.0, score))
-
-    # Threshold branch order
-    if scamIndicatorCount >= 2 or (scamIndicatorCount >= 1 and contradictingSources >= 1):
+    if official_contradict or contradict_weight >= 1.5:
         verdict = "LIKELY_FALSE"
-        confidence = 92.0
-        risk_score = 90.0
-        recommendation = "Do not share this claim. High-urgency scam or fabricated lure patterns detected."
-    elif officialContradict >= 1 or (contradictingSources >= 2 and crossSourceAgreementRatio <= 0.35):
-        verdict = "LIKELY_FALSE"
-        confidence = max(88.0, 100.0 - score)
+        confidence = 91.0
         risk_score = 85.0
         recommendation = "Do not share this claim as confirmed. Independent and official sources contradict the reported information."
-    elif officialSourceConfirms >= 1 or (score >= 65.0 and supportingSources >= 2 and crossSourceAgreementRatio >= 0.65) or (reputableSourceAgreement >= 2 and score >= 60.0 and crossSourceAgreementRatio >= 0.60):
+    elif official_support and support_weight >= 1.6 and contradict_weight < 0.4:
         verdict = "LIKELY_TRUE"
-        confidence = max(80.0, score)
-        risk_score = min(20.0, 100.0 - score)
+        confidence = 89.0
+        risk_score = 15.0
         recommendation = "This claim is supported by reliable official/news reporting. Verify specific terms on the relevant official site."
-    elif (score >= 60.0 and supportingSources >= 2 and crossSourceAgreementRatio >= 0.60) or (score >= 58.0 and supportingSources >= 2 and contradictingSources == 0):
+    elif len(sources_collected) >= 3 and support_weight >= 1.5 and support_weight > contradict_weight * 1.5:
         verdict = "LIKELY_TRUE"
-        confidence = score
-        risk_score = max(15.0, 100.0 - score)
+        confidence = 78.0
+        risk_score = 25.0
         recommendation = "Multiple independent news sources report this claim. Exercise standard caution for ongoing updates."
-    elif scamIndicatorCount >= 1:
+    elif any(kw in content_lower for kw in ["guarantee", "100%", "lottery", "free money", "claim prize", "urgent"]):
         verdict = "SUSPICIOUS"
         confidence = 76.0
         risk_score = 72.0
+        reasons_collected.append({
+            "type": "warning",
+            "text": "Claim displays high-risk commercial or financial lure patterns with insufficient independent validation",
+        })
         recommendation = "SUSPICIOUS: The claim contains high-urgency or financial promises that lack verified backing. Avoid financial transactions."
-    elif score <= 25.0 and contradictingSources >= 2:
-        verdict = "LIKELY_FALSE"
-        confidence = 82.0
-        risk_score = 80.0
-        recommendation = "Evidence indicates this claim is false or fabricated."
     else:
         # 🟡 THE UNVERIFIED SYSTEM
         verdict = "UNVERIFIED"
@@ -832,11 +642,6 @@ async def verify_claims_and_retrieve_evidence(extracted_claims: list[dict], raw_
             "text": "No authoritative government or official statement found regarding this specific assertion",
         })
         recommendation = "🟡 UNVERIFIED: There is insufficient reliable evidence to confirm or reject this claim. Exercise caution before sharing or acting on it."
-
-    # 3.5 Deep AI Synthesis (Google Gemini) for explanatory insight if AI_API_KEY is configured
-    gemini_ai_insight = None
-    if settings.ai_api_key:
-        gemini_ai_insight = await query_gemini_reasoning(primary_claim, settings.ai_api_key)
 
     # Baseline fallback sources if live search returned empty
     if not sources_collected:
