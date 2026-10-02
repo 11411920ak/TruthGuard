@@ -33,12 +33,22 @@ TruthGuard introduces a robust **Four-Verdict Decision System** with an explicit
 
 ## 📊 The Four-Verdict Decision Paradigm
 
-| Verdict | Color | Trust Score | Meaning & Actionable Guidance |
+| Verdict | Indicator | Trust Score | Meaning & Actionable Guidance |
 |:---|:---:|:---:|:---|
-| **LIKELY TRUE** | 🟢 Green | 75 – 100 | Verified and corroborated by Tier-1 authoritative primary sources or verified SSL credentials. |
-| **LIKELY FALSE** | 🔴 Red | 0 – 35 | Directly contradicted by authoritative evidence, blacklisted, or exhibiting critical phishing/scam indicators. |
-| **SUSPICIOUS** | 🟡 Yellow | 36 – 59 | Heightened risk signals detected: handle impersonation, domain typosquatting, high clickbait, or urgency panic triggers. |
-| **UNVERIFIED** | ⚪ Slate | 40 – 60 | **Epistemic Safeguard**: Incomplete or zero independent corroboration discovered. The user is cautioned **not to trust or forward**. |
+| **LIKELY TRUE** | `✓` Confirmed | 75 – 100 | Verified and corroborated by Tier-1 authoritative primary sources or verified SSL credentials. |
+| **LIKELY FALSE** | `✕` Contradicted | 0 – 35 | Directly contradicted by authoritative evidence, blacklisted, or exhibiting critical phishing/scam indicators. |
+| **SUSPICIOUS** | `!` Warning | 36 – 59 | Heightened risk signals detected: handle impersonation, domain typosquatting, high clickbait, or urgency panic triggers. |
+| **UNVERIFIED** | `—` Insufficient | 40 – 60 | **Epistemic Safeguard**: Incomplete or zero independent corroboration discovered. The user is cautioned **not to trust or forward**. |
+
+---
+
+## 🎨 Minimal Dashboard Color System
+
+TruthGuard utilizes a high-contrast 4-color palette for data visualization and readability:
+- **Primary Background**: `#222831` (near-black layout canvas)
+- **Secondary Surfaces & Panels**: `#1F3A5F` (dark navy cards and audit tables)
+- **Accent & Highlights**: `#5AA9E6` (light blue action buttons, active navigation, trend arrows, chart lines)
+- **Text & High-Contrast Elements**: `#EAF4F4` (off-white readable typography, headings, and data counts)
 
 ---
 
